@@ -21,6 +21,8 @@ class Alert:
     flux_error: float = np.nan
     zeropoint: float = np.nan
     
+    #TODO: implement __eq__ and __hash__ functions
+    
     def __post_init__(self):
         assert ~np.isnan(mjd)
         if np.isnan(self.flux) and ~np.isnan(self.zeropoint):
