@@ -12,6 +12,7 @@ class LightCurve:
     
     ID: str
     alerts: pd.DataFrame = field(default_factory=pd.DataFrame)
+    properties: Dict = field(default_factory=Dict)
     
     
     def __post_init__(self):
@@ -48,6 +49,13 @@ class LightCurve:
             self.alerts.iloc[prev_row_idx+1] = alert.dict
 
             
+    def add_property(self, prop_key, prop_value, overwrite=True):
+        """Add property from filter.
+        """
+        if overwrite or (prop_key not in self.properties):
+            self.properties[prop_key] = prop_value
+            
+        
     @property
     def timeseries(self, cols=None):
         """Return time series of alerts,

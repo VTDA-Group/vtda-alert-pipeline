@@ -17,6 +17,7 @@ class Alert:
     magnitude: float
     mag_error: float
     band: str
+    upper_limit: bool
     
     flux: float = np.nan
     flux_error: float = np.nan
