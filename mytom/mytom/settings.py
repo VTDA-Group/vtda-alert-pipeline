@@ -60,7 +60,8 @@ INSTALLED_APPS = [
     'tom_observations',
     'tom_dataproducts',
     'tom_setup',
-]
+    'tom_antares'
+    ]
 
 SITE_ID = 1
 
@@ -245,7 +246,7 @@ TOM_FACILITY_CLASSES = [
 
 TOM_ALERT_CLASSES = [
     'tom_alerts.brokers.alerce.ALeRCEBroker',
-    'tom_alerts.brokers.antares.ANTARESBroker',
+    'tom_antares.antares.ANTARESBroker',
     'tom_alerts.brokers.gaia.GaiaBroker',
     'tom_alerts.brokers.lasair.LasairBroker',
     'tom_alerts.brokers.scout.ScoutBroker',
@@ -255,7 +256,7 @@ TOM_ALERT_CLASSES = [
 
 BROKERS = {
     'TNS': {
-        'api_key': '',
+        'api_key': os.environ['TNS_APIKEY'],
         'bot_id': '',
         'bot_name': '',
     }
@@ -270,7 +271,7 @@ TOM_HARVESTER_CLASSES = [
 
 HARVESTERS = {
     'TNS': {
-        'api_key': ''
+        'api_key': os.environ['TNS_APIKEY']
     }
 }
 
