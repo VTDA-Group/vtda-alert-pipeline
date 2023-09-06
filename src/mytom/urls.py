@@ -1,3 +1,4 @@
+
 """django URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -16,7 +17,9 @@ Including another URLconf
 
 
 from django.urls import path, include
-from .views import AboutView
+import os
+import sys
+from custom_code.views import AboutView
 
 urlpatterns = [
     path('', include('tom_common.urls')),
