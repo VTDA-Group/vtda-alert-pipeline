@@ -1,0 +1,30 @@
+{% extends 'tom_common/base.html' %}
+{% load static targets_extras observation_extras dataproduct_extras tom_common_extras %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <h2 class="text-center">Welcome to the VHU-TDA TOM!</h2>
+    <!-- BEGIN MODIFIED CONTENT -->
+
+    <p class="text-center"><img src="{% static 'img/Pikachu.png' %}" class="img-fluid mx-auto"></p>
+
+    <!-- END MODIFIED CONTENT -->
+    <h2 class="text-center">You're a wonderful human being</h2>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        Latest Comments
+      </div>
+      {% recent_comments %}
+    </div>
+    <br/>
+    <div class="card">
+      <div class="card-header">
+        Latest Targets
+      </div>
+      {% recent_targets %}
+  </div>
+</div>
+{% endblock %}
