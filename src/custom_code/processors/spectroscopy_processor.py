@@ -42,7 +42,7 @@ class SpectroscopyProcessor(DataProcessor):
 
         serialized_spectrum = SpectrumSerializer().serialize(spectrum)
 
-        return [(obs_date, serialized_spectrum, "WEEE")]
+        return [(obs_date, serialized_spectrum, '')]
 
     def _process_spectrum_from_fits(self, data_product):
         """
