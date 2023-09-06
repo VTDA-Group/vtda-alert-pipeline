@@ -14,7 +14,6 @@ import logging.config
 import os
 import tempfile
 
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -36,6 +35,7 @@ ALLOWED_HOSTS = []
 TOM_NAME = 'TOM Toolkit'
 
 INSTALLED_APPS = [
+    'custom_code',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -301,7 +301,7 @@ TARGET_PERMISSIONS_ONLY = True
 OPEN_URLS = []
 
 HOOKS = {
-    'target_post_save': 'tom_common.hooks.target_post_save',
+    'target_post_save': 'custom_code.hooks.target_post_save',
     'observation_change_state': 'tom_common.hooks.observation_change_state',
     'data_product_post_upload': 'tom_dataproducts.hooks.data_product_post_upload',
     'data_product_post_save': 'tom_dataproducts.hooks.data_product_post_save',
