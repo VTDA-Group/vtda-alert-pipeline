@@ -35,7 +35,6 @@ ALLOWED_HOSTS = []
 TOM_NAME = 'TOM Toolkit'
 
 INSTALLED_APPS = [
-    'custom_code',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -60,7 +59,8 @@ INSTALLED_APPS = [
     'tom_observations',
     'tom_dataproducts',
     'tom_setup',
-    'tom_antares'
+    'tom_antares',
+    'custom_code'
     ]
 
 SITE_ID = 1

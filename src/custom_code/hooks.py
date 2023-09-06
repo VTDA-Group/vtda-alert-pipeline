@@ -1,5 +1,5 @@
 import numpy as np
-from custom_code.filters.filter_base import run, get_all_filters
+from custom_code.filters.filter_helper import get_all_filters
 
 def target_post_save(target, created):
     """Custom post-save workflow for target."""
