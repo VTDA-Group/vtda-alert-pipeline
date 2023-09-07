@@ -247,7 +247,7 @@ TOM_FACILITY_CLASSES = [
 
 TOM_ALERT_CLASSES = [
     'tom_alerts.brokers.alerce.ALeRCEBroker',
-    'tom_antares.antares.ANTARESBroker',
+    'custom_code.brokers.antares_complete.ANTARESBroker',
     'tom_alerts.brokers.gaia.GaiaBroker',
     'tom_alerts.brokers.lasair.LasairBroker',
     'tom_alerts.brokers.scout.ScoutBroker',
