@@ -29,7 +29,7 @@ class RequeryBrokerView(RedirectView):
             'mag__min': 12.0,
             'mag__max': 20.0,
             'mjd__gt': current_mjd - 30.0,
-            'max_alerts': 1000,
+            'max_alerts': 100,
         }
 
         broker_name = 'ANTARES' # hard-coded for now
@@ -38,13 +38,8 @@ class RequeryBrokerView(RedirectView):
         errors = []
         for alert in broker.fetch_alerts(default_params):
             try:
-                #print(alert)
-                #generic_alert = broker.to_generic_alert(alert)
-                #print(generic_alert.id)
-                #full_alert = broker.fetch_alert(generic_alert.id)
                 target, _, aliases = broker.to_target(alert)
-                #target.save(names=aliases)
-                #broker_class().process_reduced_data(target, json.loads(cached_alert))
+                target.save(names=aliases)
 
             except IntegrityError:
                     print('Unable to save alert, target with that name already exists.')
