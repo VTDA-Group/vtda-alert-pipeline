@@ -10,6 +10,7 @@ import marshmallow
 
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
 from tom_targets.models import Target, TargetName
+from tom_dataproducts.models import ReducedDatum
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class ANTARESBrokerForm(GenericQueryForm):
         required=False,
         label='Dec',
         widget=forms.TextInput(attrs={'placeholder': 'Dec (Degrees)'}),
-        min_value==-90.0
+        min_value=-90.0
     )
     sr = forms.FloatField(
         required=False,
@@ -379,7 +380,7 @@ class ANTARESBroker(GenericBroker):
         """Implemented in this version, NOT in the original ANTARES filter.
         """
         oid = target.name
-        alerts = self.fetch_alert(oid)['alerts']
+        alerts = self.fetch_alert(oid).alerts
 
         for alert in alerts:
             mjd = Time(alert.mjd, format='mjd', scale='utc')
