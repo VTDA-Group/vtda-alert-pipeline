@@ -247,7 +247,7 @@ TOM_FACILITY_CLASSES = [
 
 TOM_ALERT_CLASSES = [
     'tom_alerts.brokers.alerce.ALeRCEBroker',
-    'tom_antares.antares.ANTARESBroker',
+    'custom_code.brokers.antares_complete.ANTARESBroker',
     'tom_alerts.brokers.gaia.GaiaBroker',
     'tom_alerts.brokers.lasair.LasairBroker',
     'tom_alerts.brokers.scout.ScoutBroker',
@@ -279,13 +279,9 @@ HARVESTERS = {
 # Define extra target fields here. Types can be any of "number", "string", "boolean" or "datetime"
 # See https://tomtoolkit.github.io/docs/target_fields for documentation on this feature
 # For example:
-# EXTRA_FIELDS = [
-#     {'name': 'redshift', 'type': 'number'},
-#     {'name': 'discoverer', 'type': 'string'}
-#     {'name': 'eligible', 'type': 'boolean'},
-#     {'name': 'dicovery_date', 'type': 'datetime'}
-# ]
-EXTRA_FIELDS = []
+EXTRA_FIELDS = [
+     {'name': 'redshift', 'type': 'number'},
+]
 
 # Authentication strategy can either be LOCKED (required login for all views)
 # or READ_ONLY (read only access to views)
