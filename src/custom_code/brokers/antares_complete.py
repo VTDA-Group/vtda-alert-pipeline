@@ -59,7 +59,7 @@ class ANTARESBrokerForm(GenericQueryForm):
         required=False,
         label='Dec',
         widget=forms.TextInput(attrs={'placeholder': 'Dec (Degrees)'}),
-        min_value==-90.0
+        min_value=-90.0
     )
     sr = forms.FloatField(
         required=False,
