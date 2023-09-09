@@ -11,6 +11,9 @@ import marshmallow
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
 from tom_targets.models import Target, TargetName
 
+from tom_dataproducts.models import DataProduct, ReducedDatum
+
+
 logger = logging.getLogger(__name__)
 
 ANTARES_BASE_URL = 'https://antares.noirlab.edu'
@@ -379,13 +382,13 @@ class ANTARESBroker(GenericBroker):
         """Implemented in this version, NOT in the original ANTARES filter.
         """
         oid = target.name
-        alerts = self.fetch_alert(oid)['alerts']
+        alerts = self.fetch_alert(oid).alerts
 
         for alert in alerts:
             mjd = Time(alert.mjd, format='mjd', scale='utc')
             properties = alert.properties
-            is_upper_lim = properties['ant_maglim'] is not None
-            if ~is_upper_lim:
+            is_upper_lim = 'ant_mag' not in properties
+            if not is_upper_lim:
                 value = {
                     'filter': properties['ant_passband'],
                     'magnitude': properties['ant_mag'],

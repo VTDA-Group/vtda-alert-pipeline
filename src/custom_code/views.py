@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from tom_alerts.alerts import get_service_class, get_service_classes
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
-
+from astropy.time import Time
 
 
 class AboutView(TemplateView):
@@ -20,7 +20,9 @@ class RequeryBrokerView(RedirectView):
     
     def get(self, request, *args, **kwargs):
 
-        current_mjd = 60194 # TODO: unhard-code this
+        current_mjd = nt = Time.now().mjd 
+        print('HERE',current_mjd)
+
         default_params = {
             'ra': 180.0,
             'dec': 0.1,
