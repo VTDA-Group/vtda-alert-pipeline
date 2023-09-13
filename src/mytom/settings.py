@@ -253,6 +253,7 @@ TOM_ALERT_CLASSES = [
     'tom_alerts.brokers.scout.ScoutBroker',
     'tom_alerts.brokers.tns.TNSBroker',
     'tom_alerts.brokers.fink.FinkBroker',
+    'custom_code.brokers.meta_broker_bandaid.NovelBroker'
 ]
 
 BROKERS = {
