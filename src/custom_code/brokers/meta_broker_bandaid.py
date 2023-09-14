@@ -23,7 +23,8 @@ superphot_types = ['SN Ia', 'SN II', 'SN IIn', 'SLSN', 'SN Ibc']
 tns_label_dict = {'SN Ia':'Ia', 'SN II':'II', 'SN IIn': 'IIn', 'SLSN': 'SLSN', 'SN Ibc': 'Ibc'}
 
 def get_available_tags():
-    tags = [{'type': 'tag', 'attributes': {'filter_version_id': 1, 'description': 'A hard-coded test.'}, 'id': 'superphot_plus_classified', 'file': {'self': './'}}]
+    tags = [{'type': 'tag', 'attributes': {'filter_version_id': 1, 'description': 'A hard-coded test.'}, 'id': 'LAISS_RFC_AD_filter', 'file': {'self': './'}},
+    {'type': 'tag', 'attributes': {'filter_version_id': 1, 'description': 'A hard-coded test.'}, 'id': 'superphot_plus_classified', 'file': {'self': './'}}]
     return tags
 
 
@@ -352,25 +353,35 @@ class NovelBroker(GenericBroker):
 #            loci = get_by_ztf_object_id(ztfid)
         alerts = []
         while len(alerts) < max_alerts:
-            locus = next(loci)
             skippy = True
             try:   
                 locus = next(loci)
                 if sn_type[0] != 'None':
-                    print(sn_type)
-                    print('should not be here')
                     if tns:
                         if 'tns_public_objects' in locus.catalogs:
                             if 'type' in locus.catalog_objects['tns_public_objects']:
                                 if locus.catalog_objects['tns_public_objects']['type'] == tns_label_dict[sn_type[0]]:
                                     skippy = False
-                    if locus.properties['superphot_plus_class'] == sn_type[0]:
+                    if ('superphot_plus_class' in locus.properties) & ('superphot_plus_classified' in tags):
+                        if locus.properties['superphot_plus_class'] == sn_type[0]:
+                            skippy = False
+                if 'LAISS_RFC_AD_filter' in tags:
+                    anomaly_true = self.run_anomaly_tag(locus)
+                    if anomaly_true:
                         skippy = False
+
             except (marshmallow.exceptions.ValidationError, StopIteration):
                 break
             if not skippy:
                 alerts.append(self.alert_to_dict(locus))
         return iter(alerts)
+
+    def run_anomaly_tag(self, locus):
+        if locus.properties['LAISS_RFC_anomaly_score'] > 25:
+            return True
+        else:
+            return False
+
 
     def fetch_alert(self, id):
         alert = get_by_ztf_object_id(id)
