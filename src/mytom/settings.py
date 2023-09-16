@@ -27,7 +27,7 @@ SECRET_KEY = '!tq-x+hdggqjx+jzj4_hb#fo+nt++79a4@f&amp;g@3^s+i052v+&amp;h'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+
 
 
 # Application definition
@@ -246,21 +246,16 @@ TOM_FACILITY_CLASSES = [
 ]
 
 TOM_ALERT_CLASSES = [
-    'tom_alerts.brokers.alerce.ALeRCEBroker',
     'custom_code.brokers.antares_complete.ANTARESBroker',
-    'tom_alerts.brokers.gaia.GaiaBroker',
-    'tom_alerts.brokers.lasair.LasairBroker',
-    'tom_alerts.brokers.scout.ScoutBroker',
-    'tom_alerts.brokers.tns.TNSBroker',
-    'tom_alerts.brokers.fink.FinkBroker',
+    'custom_code.brokers.tns.TNSBroker',
     'custom_code.brokers.meta_broker_bandaid.NovelBroker'
 ]
 
 BROKERS = {
     'TNS': {
         'api_key': os.environ['TNS_APIKEY'],
-        'bot_id': '',
-        'bot_name': '',
+        'bot_id': '126596',
+        'bot_name': 'PSUBOT',
     }
 }
 

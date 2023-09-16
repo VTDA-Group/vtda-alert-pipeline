@@ -45,7 +45,10 @@ $(document).ready(function(){
   <div class="col-md-8">
     <ul class="nav nav-tabs" role="tablist" id="tabs">
       <li class="nav-item">
-        <a class="nav-link active" id="observe-tab" href="#observe" role="tab" data-toggle="tab">Observe</a>
+        <a class="nav-link active" id="photometry-tab" href="#photometry" role="tab" data-toggle="tab">Photometry</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="observe-tab" href="#observe" role="tab" data-toggle="tab">Observe</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" id="observations-tab" href="#observations" role="tab" data-toggle="tab">Observations</a>
@@ -57,14 +60,11 @@ $(document).ready(function(){
         <a class="nav-link" id="manage-groups-tab" href="#manage-groups" role="tab" data-toggle="tab">Manage Groups</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" id="photometry-tab" href="#photometry" role="tab" data-toggle="tab">Photometry</a>
-      </li>
-      <li class="nav-item">
         <a class="nav-link" id="spectroscopy-tab" href="#spectroscopy" role="tab" data-toggle="tab">Spectroscopy</a>
       </li>
     </ul>
     <div class="tab-content">
-      <div class="tab-pane active" id="observe">
+      <div class="tab-pane" id="observe">
         <h4>Observe</h4>
         {% observing_buttons object %}
         <hr/>
@@ -93,9 +93,8 @@ $(document).ready(function(){
       <div class="tab-pane" id="manage-groups">
         {% target_groups target %}
       </div>
-      <div class="tab-pane" id="photometry">
+      <div class="tab-pane active" id="photometry">
         {% photometry_for_target target %}
-        {% get_photometry_data object %}
         </div>
       <div class="tab-pane" id="spectroscopy">
         {% spectroscopy_for_target target %}
