@@ -50,11 +50,32 @@ class TargetListView(PermissionListMixin, FilterView):
 
 class RequeryBrokerView(RedirectView):
     #template_name = 'tom_targets/target_list.html'
+    #model = ProjectTargetList
     
+    def save_alerts_to_group(project, broker):
+        """Save list of alerts' targets along
+        with a certain group tag."""
+        params = project.query_params()
+        for alert in broker.fetch_alerts(params):
+            try:
+                target, _, aliases = broker.to_target(alert)
+                add_to_project = project.criteria(target)
+                if add_to_project:
+                    target.save(names=aliases)
+                    project.add(target)
+
+            except IntegrityError:
+                    print('Unable to save alert, either because ' +
+                          'target with that name already exists, or because ' +
+                          'there was an error saving target to project.'
+                         )                    
+                    
+        
     def get(self, request, *args, **kwargs):
         
         current_mjd = Time.now().mjd 
 
+        """
         default_params = {
             'ra': 180.0,
             'dec': 0.1,
@@ -65,18 +86,13 @@ class RequeryBrokerView(RedirectView):
             'mjd__gt': current_mjd - 30.0,
             'max_alerts': 100,
         }
+        """
 
         broker_name = 'ANTARES' # hard-coded for now
         broker = get_service_class(broker_name)()
-
-        errors = []
-        for alert in broker.fetch_alerts(default_params):
-            try:
-                target, _, aliases = broker.to_target(alert)
-                target.save(names=aliases)
-
-            except IntegrityError:
-                    print('Unable to save alert, target with that name already exists.')
-                    #errors.append(target.name)
+        
+        for project in ProjectTargetList.objects.all():
+            save_alerts_to_group(project, broker)
+        
                     
         return HttpResponseRedirect(reverse('targets:list'))
