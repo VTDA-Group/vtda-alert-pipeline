@@ -20,7 +20,9 @@ class ProjectTargetList(TargetList):
     :param modified: The time at which this target list was modified in the TOM database.
     :type modified: datetime
     """
-    name = models.CharField(max_length=200, help_text='The name of the Project.')
+    # Note from Kaylee: apparently in Django you can't override attributes of non-abstract classes!
+    # May change TargetList and ProjectTargetList to both inherit from mutual abstract class in future
+    #name = models.CharField(max_length=200, help_text='The name of the Project.')
 
     class Meta:
         ordering = ('-created', 'name',)
