@@ -1,4 +1,5 @@
 from django.views.generic.base import RedirectView, TemplateView, View
+from django.views.generic.edit import CreateView
 from tom_observations.models import Target
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
@@ -9,6 +10,9 @@ from astropy.time import Time
 from guardian.mixins import PermissionListMixin
 from django_filters.views import FilterView
 from tom_targets.filters import TargetFilter
+
+from custom_code.models import ProjectTargetList
+from custom_code.forms import ProjectForm
 
 
 class AboutView(TemplateView):
@@ -47,6 +51,30 @@ class TargetListView(PermissionListMixin, FilterView):
         context['query_string'] = self.request.META['QUERY_STRING']
         return context
 
+    
+class ProjectCreateView(CreateView):
+    """
+    View that handles the creation of ``TargetList`` objects, also known as target groups. Requires authentication.
+    """
+    form_class = ProjectForm
+    model = ProjectTargetList
+    template_name = 'tom_targets/project_form.html'
+    success_url = reverse_lazy('targets:projects')
+
+
+    def form_valid(self, form):
+        """
+        Runs after form validation. Saves the target group and assigns the user's permissions to the group.
+
+        :param form: Form data for target creation
+        :type form: django.forms.ModelForm
+        """
+        return super().form_valid(form)
+        #project = form.save(commit=False)
+        #project.save()
+        #return super().form_valid(form)
+
+    
 
 class RequeryBrokerView(RedirectView):
     #template_name = 'tom_targets/target_list.html'
