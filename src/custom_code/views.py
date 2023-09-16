@@ -20,7 +20,7 @@ class RequeryBrokerView(RedirectView):
     
     def get(self, request, *args, **kwargs):
 
-        current_mjd = nt = Time.now().mjd 
+        current_mjd = Time.now().mjd 
         print('HERE',current_mjd)
 
         default_params = {
