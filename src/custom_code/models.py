@@ -35,7 +35,7 @@ class ProjectTargetList(TargetList):
         """
         pass
     
-    def criteria(self, target):
+    def run_criteria(self, target):
         """Any further project criteria that can not be fed into query_params.
         Takes in the Target object and returns boolean whether it passes criteria
         or not.

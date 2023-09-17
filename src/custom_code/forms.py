@@ -18,9 +18,15 @@ from tom_observations.models import ObservationRecord
 from tom_antares.antares import get_tag_choices
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
 from tom_targets.models import Target, TargetName
+from custom_code.models import ProjectTargetList
 
 
-class ProjectForm(forms.Form):
+class ProjectForm(forms.ModelForm):
+    
+    class Meta:
+        model = ProjectTargetList
+        fields = [] # list of fields you want from model
+        
     # define form content
     ztfid = forms.CharField(
         required=False,
@@ -99,6 +105,9 @@ class ProjectForm(forms.Form):
 
     # TODO: add layout
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.layout = Layout(
             HTML('''
                 <p>

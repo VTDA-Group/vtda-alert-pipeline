@@ -1,5 +1,6 @@
 from django.views.generic.base import RedirectView, TemplateView, View
 from django.views.generic.edit import CreateView
+from django.views.generic.list import ListView
 from tom_observations.models import Target
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
@@ -50,7 +51,17 @@ class TargetListView(PermissionListMixin, FilterView):
                                 else TargetList.objects.none())
         context['query_string'] = self.request.META['QUERY_STRING']
         return context
+    
 
+class ProjectView(ListView):
+    """
+    View that handles the display of ``TargetList`` objects, also known as target groups. Requires authorization.
+    """
+    #permission_required = 'tom_targets.view_targetlist'
+    template_name = 'tom_targets/projects.html'
+    model = ProjectTargetList
+    paginate_by = 25
+    
     
 class ProjectCreateView(CreateView):
     """
@@ -59,7 +70,7 @@ class ProjectCreateView(CreateView):
     form_class = ProjectForm
     model = ProjectTargetList
     template_name = 'tom_targets/project_form.html'
-    success_url = reverse_lazy('targets:projects')
+    success_url = reverse_lazy('custom_code:projects')
 
 
     def form_valid(self, form):
