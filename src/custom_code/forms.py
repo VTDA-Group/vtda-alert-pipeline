@@ -28,12 +28,17 @@ class ProjectForm(forms.ModelForm):
         fields = [] # list of fields you want from model
         
     # define form content
+    project_name = forms.CharField(required=True)
     ztfid = forms.CharField(
         required=False,
         label='',
         widget=forms.TextInput(attrs={'placeholder': 'ZTF object id, e.g. ZTF19aapreis'})
         )
-    tag = forms.MultipleChoiceField(required=False, choices=get_tag_choices)
+    tags = forms.MultipleChoiceField(
+        required=False,
+        choices=get_tag_choices,
+        widget=forms.CheckboxSelectMultiple,
+    )
     nobs__gt = forms.IntegerField(
         required=False,
         label='Detections Lower',
@@ -48,13 +53,15 @@ class ProjectForm(forms.ModelForm):
         required=False,
         label='RA',
         widget=forms.TextInput(attrs={'placeholder': 'RA (Degrees)'}),
+        max_value=360.0,
         min_value=0.0
     )
     dec = forms.FloatField(
         required=False,
         label='Dec',
         widget=forms.TextInput(attrs={'placeholder': 'Dec (Degrees)'}),
-        min_value=0.0
+        max_value=90.0,
+        min_value=-90.0
     )
     sr = forms.FloatField(
         required=False,
@@ -86,6 +93,7 @@ class ProjectForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'placeholder': 'Max Magnitude'}),
         min_value=0.0
     )
+    """
     criteria = forms.JSONField(
         required=False,
         label='Additional criteria as a Python function',
@@ -97,6 +105,7 @@ class ProjectForm(forms.ModelForm):
         min_value=1,
         initial=20
     )
+    """
 
     # cone_search = ConeSearchField()
     # api_search_tags = forms.MultipleChoiceField(choices=get_tag_choices)
@@ -107,7 +116,7 @@ class ProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Submit('submit', 'Create'))
         self.helper.layout = Layout(
             HTML('''
                 <p>
@@ -117,6 +126,10 @@ class ProjectForm(forms.ModelForm):
             </p>
             '''),
             HTML('<hr/>'),
+            Fieldset(
+                'Project Name',
+                'project_name'
+            ),
             HTML('<p style="color:blue;font-size:30px">ANTARES query parameters</p>'),
             Fieldset(
                 'Alert timing',
@@ -180,8 +193,9 @@ class ProjectForm(forms.ModelForm):
             ),
             Fieldset(
                 'View Tags',
-                'tag'
+                'tags'
             ),
+            """
             Fieldset(
                 'Max Alerts',
                 'max_alerts'
@@ -192,6 +206,7 @@ class ProjectForm(forms.ModelForm):
                  '',
                  'criteria'
             ),
+            """
         )
 
     def clean(self):
@@ -218,15 +233,5 @@ class ProjectForm(forms.ModelForm):
         if (all(cleaned_data[k] for k in ['mag__min', 'mag__max'])
                 and cleaned_data['mag__max'] <= cleaned_data['mag__min']):
             raise forms.ValidationError('Min magnitude must be smaller than max magnitude.')
-
-        # Ensure using either a stream or the advanced search form
-        # if not (cleaned_data['tag'] or cleaned_data['esquery']):
-        #    raise forms.ValidationError('Please either select tag(s) or use the advanced search query.')
-
-        # Ensure using either a stream or the advanced search form
-        if not (cleaned_data['ztfid'] or cleaned_data['tag'] or cleaned_data['esquery']):
-            raise forms.ValidationError(
-                'Please either enter the ZTF ID, or select tag(s), or use the advanced search query.'
-            )
 
         return cleaned_data

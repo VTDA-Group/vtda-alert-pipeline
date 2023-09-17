@@ -24,16 +24,13 @@ class ProjectTargetList(TargetList):
     # May change TargetList and ProjectTargetList to both inherit from mutual abstract class in future
     #name = models.CharField(max_length=200, help_text='The name of the Project.')
 
+    query = models.CharField(max_length=1000, help_text="This project's query submission string for ANTARES.")
+    
     class Meta:
         ordering = ('-created', 'name',)
 
     def __str__(self):
         return self.name
-    
-    def query_params(self):
-        """Define custom query parameters assuming ANTARES broker.
-        """
-        pass
     
     def run_criteria(self, target):
         """Any further project criteria that can not be fed into query_params.
