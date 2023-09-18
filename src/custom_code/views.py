@@ -18,6 +18,12 @@ import json
 
 from custom_code.models import ProjectTargetList
 from custom_code.forms import ProjectForm
+from custom_code.filter_helper import (
+    check_type_tns,
+    run_anomaly_tag,
+    tns_label_dict,
+)
+    
 
 
 class AboutView(TemplateView):
@@ -147,8 +153,12 @@ class ProjectCreateView(FormView):
         param_dict = form.cleaned_data
         query_str = self.generate_query_string(param_dict)
         name = form.cleaned_data['project_name']
+        tns = form.cleaned_data['tns']
+        sn_type = form.cleaned_data['sn_type']
         project = ProjectTargetList(
             name=name,
+            tns=tns,
+            sn_type=sn_type,
             query=query_str,
         )
         project.save()
@@ -170,9 +180,14 @@ class RequeryBrokerView(RedirectView):
     def save_alerts_to_group(self, project, broker):
         """Save list of alerts' targets along
         with a certain group tag."""
-        MAX_ALERTS = 100
+        MAX_ALERTS = 20
         query = json.loads(project.query)
         loci = antares_client.search.search(query)
+        sn_type = project.sn_type[2:-2] # TODO: fix this
+        tns = project.tns
+        # TODO: make this not atrocious, will be fixed when query string is not
+        #directly saved to model
+        tags = query['query']['bool']['filter'][-1]['term']['tags']
 
         n_alerts = 0
         while n_alerts < MAX_ALERTS:
@@ -180,7 +195,22 @@ class RequeryBrokerView(RedirectView):
                 locus = next(loci)
             except (marshmallow.exceptions.ValidationError, StopIteration):
                 break
-
+                
+            #bandaid solution
+            # TODO: fix
+            if sn_type not in ['None', '']:
+                skippy = True
+                if tns and check_type_tns(locus, tns_label_dict[sn_type]):
+                    skippy = False
+                if ('superphot_plus_class' in locus.properties) & ('superphot_plus_classified' in tags):
+                    if locus.properties['superphot_plus_class'] == sn_type:
+                        skippy = False
+                if 'LAISS_RFC_AD_filter' in tags:
+                    if self.run_anomaly_tag(locus):
+                        skippy = False
+                if skippy:
+                    continue
+                    
             alert = broker.alert_to_dict(locus)
             try:
                 target, _, aliases = broker.to_target(alert)
@@ -192,7 +222,6 @@ class RequeryBrokerView(RedirectView):
                     Target,
                     name=alert['properties']['ztf_object_id']
                 )
-
             try:
                 project.targets.add(target)
                 n_alerts += 1   

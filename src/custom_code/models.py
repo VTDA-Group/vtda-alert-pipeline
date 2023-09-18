@@ -24,7 +24,16 @@ class ProjectTargetList(TargetList):
     # May change TargetList and ProjectTargetList to both inherit from mutual abstract class in future
     #name = models.CharField(max_length=200, help_text='The name of the Project.')
 
-    query = models.CharField(max_length=1000, help_text="This project's query submission string for ANTARES.")
+    query = models.CharField(
+        max_length=1000, help_text="This project's query submission string for ANTARES."
+    )
+    tns = models.BooleanField(
+        help_text="Whether to query TNS catalog"
+    )
+    sn_type = models.CharField(
+        max_length=100, help_text="The supernova type to check for."
+    )
+
     
     class Meta:
         ordering = ('-created', 'name',)

@@ -18,13 +18,18 @@ from tom_observations.models import ObservationRecord
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
 from tom_targets.models import Target, TargetName
 from custom_code.models import ProjectTargetList
-from custom_code.filter_helper import all_antares_tag_choices
+from custom_code.filter_helper import (
+    all_antares_tag_choices,
+    get_sn_types
+)
 
 
 class ProjectForm(forms.Form):
 
     # define form content
     project_name = forms.CharField(required=True)
+    sn_type = forms.MultipleChoiceField(required=False, choices=get_sn_types)
+    tns = forms.BooleanField(required=False)
     
     tags = forms.MultipleChoiceField(
         required=False,
@@ -173,6 +178,14 @@ class ProjectForm(forms.Form):
             Fieldset(
                 'View Tags',
                 'tags'
+            ),
+            Fieldset(
+                'Specific Type?',
+                'sn_type'
+            ),
+            Fieldset(
+                'Include TNS?',
+                'tns'
             ),
             """
             Fieldset(
