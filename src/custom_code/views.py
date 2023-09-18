@@ -1,5 +1,5 @@
 from django.views.generic.base import RedirectView, TemplateView, View
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, DeleteView
 from django.views.generic.list import ListView
 from tom_observations.models import Target
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -72,7 +72,7 @@ class ProjectCreateView(CreateView):
     View that handles the creation of ``TargetList`` objects, also known as target groups. Requires authentication.
     """
     form_class = ProjectForm
-    model = ProjectTargetList
+    #model = ProjectTargetList
     template_name = 'tom_targets/project_form.html'
     success_url = reverse_lazy('custom_code:projects')
 
@@ -157,7 +157,16 @@ class ProjectCreateView(CreateView):
         return super().form_valid(form)
 
     
+class ProjectDeleteView(DeleteView):
+    """
+    View that handles the deletion of ``ProjectTargetList`` objects, also known as target groups. Requires authorization.
+    """
+    model = ProjectTargetList
+    template_name = 'tom_targets/projecttargetlist_confirm_delete.html'
+    success_url = reverse_lazy('custom_code:projects')
 
+    
+    
 class RequeryBrokerView(RedirectView):
     #template_name = 'tom_targets/target_list.html'
     #model = ProjectTargetList

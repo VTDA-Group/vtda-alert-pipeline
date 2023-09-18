@@ -1,8 +1,8 @@
 {% extends 'tom_common/base.html' %}
 {% load bootstrap4 %}
-{% block title %}Target Groups{% endblock %}
+{% block title %}Projects{% endblock %}
 {% block content %}
-<h1>Target Groupings</h1>
+<h1>Projects</h1>
 <div class="row">
     <div class="col-md-10">
         <p>
@@ -25,7 +25,7 @@
       <tr>
         <td><button type="submit" class="btn btn-link" name="targetlist__name" value="{{group.id}}" title="View Group">{{ group.name }}</button></td>
         <td valign="middle">{{ group.targets.count }}</td>
-        <td><a href="{% url 'targets:delete-group' group.id%}" title="Delete Group" class="btn btn-danger">Delete</a></td>
+        <td><a href="{% url 'custom_code:delete-project' group.id%}" title="Delete Project" class="btn btn-danger">Delete</a></td>
       </tr>
       {% empty %}
       <tr>
