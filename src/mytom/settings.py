@@ -248,7 +248,7 @@ TOM_FACILITY_CLASSES = [
 TOM_ALERT_CLASSES = [
     'custom_code.brokers.antares_complete.ANTARESBroker',
     'custom_code.brokers.tns.TNSBroker',
-    'custom_code.brokers.meta_broker_bandaid.NovelBroker'
+    #'custom_code.brokers.meta_broker_bandaid.NovelBroker'
 ]
 
 BROKERS = {
