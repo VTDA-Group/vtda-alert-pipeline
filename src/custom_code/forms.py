@@ -21,11 +21,11 @@ from tom_targets.models import Target, TargetName
 from custom_code.models import ProjectTargetList
 
 
-class ProjectForm(forms.ModelForm):
+class ProjectForm(forms.Form):
     
-    class Meta:
-        model = ProjectTargetList
-        fields = [] # list of fields you want from model
+    #class Meta:
+        #model = ProjectTargetList
+        #fields = [] # list of fields you want from model
         
     # define form content
     project_name = forms.CharField(required=True)

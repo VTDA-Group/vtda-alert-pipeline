@@ -1,5 +1,5 @@
 from django.views.generic.base import RedirectView, TemplateView, View
-from django.views.generic.edit import CreateView, DeleteView
+from django.views.generic.edit import FormView, CreateView, DeleteView
 from django.views.generic.list import ListView
 from tom_observations.models import Target
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -67,7 +67,7 @@ class ProjectView(ListView):
     paginate_by = 25
     
     
-class ProjectCreateView(CreateView):
+class ProjectCreateView(FormView):
     """
     View that handles the creation of ``TargetList`` objects, also known as target groups. Requires authentication.
     """
