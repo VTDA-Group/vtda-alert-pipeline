@@ -10,39 +10,26 @@ import marshmallow
 
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
 from tom_targets.models import Target, TargetName
-
 from tom_dataproducts.models import DataProduct, ReducedDatum
 
+from custom_code.filter_helper import (
+    all_antares_tag_choices,
+    run_anomaly_tag,
+    get_sn_types,
+    tns_label_dict,
+    check_type_tns
+)
 
 logger = logging.getLogger(__name__)
 
 ANTARES_BASE_URL = 'https://antares.noirlab.edu'
 ANTARES_API_URL = 'https://api.antares.noirlab.edu'
 ANTARES_TAG_URL = ANTARES_API_URL + '/v1/tags'
-superphot_types = ['SN Ia', 'SN II', 'SN IIn', 'SLSN', 'SN Ibc']
-tns_label_dict = {'SN Ia':'Ia', 'SN II':'II', 'SN IIn': 'IIn', 'SLSN': 'SLSN', 'SN Ibc': 'Ibc'}
-
-def get_available_tags():
-    tags = [{'type': 'tag', 'attributes': {'filter_version_id': 1, 'description': 'A hard-coded test.'}, 'id': 'LAISS_RFC_AD_filter', 'file': {'self': './'}},
-    {'type': 'tag', 'attributes': {'filter_version_id': 1, 'description': 'A hard-coded test.'}, 'id': 'superphot_plus_classified', 'file': {'self': './'}}]
-    return tags
-
-
-def get_tag_choices():
-    tags = get_available_tags()
-    return [(s['id'], s['id']) for s in tags]
-
-def get_sn_types():
-    sn_type_selection = [(s, s) for s in superphot_types]
-    sn_type_selection.append(('None','None'))
-    return sn_type_selection
-
-
 
 
 class NovelBrokerForm(GenericQueryForm):
     # define form content
-    tag = forms.MultipleChoiceField(required=False, choices=get_tag_choices)
+    tag = forms.MultipleChoiceField(required=False, choices=all_antares_tag_choices)
     sn_type = forms.MultipleChoiceField(required=False, choices=get_sn_types)
     tns = forms.BooleanField(required=False)
 
@@ -110,12 +97,6 @@ class NovelBrokerForm(GenericQueryForm):
         initial=20
     )
 
-    # cone_search = ConeSearchField()
-    # api_search_tags = forms.MultipleChoiceField(choices=get_tag_choices)
-
-    # TODO: add section for searching API in addition to consuming stream
-
-    # TODO: add layout
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.layout = Layout(
@@ -272,7 +253,7 @@ class NovelBroker(GenericBroker):
 
     def fetch_alerts(self, parameters: dict) -> iter:
         tags = parameters.get('tag')
-        sn_type = parameters.get('sn_type')
+        sn_type = parameters.get('sn_type')[0]
         tns = parameters.get('tns')
         nobs_gt = parameters.get('nobs__gt')
         nobs_lt = parameters.get('nobs__lt')
@@ -356,18 +337,14 @@ class NovelBroker(GenericBroker):
             skippy = True
             try:   
                 locus = next(loci)
-                if sn_type[0] != 'None':
-                    if tns:
-                        if 'tns_public_objects' in locus.catalogs:
-                            if 'type' in locus.catalog_objects['tns_public_objects']:
-                                if locus.catalog_objects['tns_public_objects']['type'] == tns_label_dict[sn_type[0]]:
-                                    skippy = False
-                    if ('superphot_plus_class' in locus.properties) & ('superphot_plus_classified' in tags):
-                        if locus.properties['superphot_plus_class'] == sn_type[0]:
+                if sn_type != 'None':
+                    if tns and check_type_tns(tns_label_dict[sn_type]):
+                        skippy = False
+                    elif ('superphot_plus_class' in locus.properties) & ('superphot_plus_classified' in tags):
+                        if locus.properties['superphot_plus_class'] == sn_type:
                             skippy = False
                 if 'LAISS_RFC_AD_filter' in tags:
-                    anomaly_true = self.run_anomaly_tag(locus)
-                    if anomaly_true:
+                    if self.run_anomaly_tag(locus):
                         skippy = False
 
             except (marshmallow.exceptions.ValidationError, StopIteration):
@@ -375,12 +352,6 @@ class NovelBroker(GenericBroker):
             if not skippy:
                 alerts.append(self.alert_to_dict(locus))
         return iter(alerts)
-
-    def run_anomaly_tag(self, locus):
-        if locus.properties['LAISS_RFC_anomaly_score'] > 25:
-            return True
-        else:
-            return False
 
 
     def fetch_alert(self, id):

@@ -15,28 +15,20 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, Submit, Fieldset, HTML
 
 from tom_observations.models import ObservationRecord
-from tom_antares.antares import get_tag_choices
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
 from tom_targets.models import Target, TargetName
 from custom_code.models import ProjectTargetList
+from custom_code.filter_helper import all_antares_tag_choices
 
 
 class ProjectForm(forms.Form):
-    
-    #class Meta:
-        #model = ProjectTargetList
-        #fields = [] # list of fields you want from model
-        
+
     # define form content
     project_name = forms.CharField(required=True)
-    ztfid = forms.CharField(
-        required=False,
-        label='',
-        widget=forms.TextInput(attrs={'placeholder': 'ZTF object id, e.g. ZTF19aapreis'})
-        )
+    
     tags = forms.MultipleChoiceField(
         required=False,
-        choices=get_tag_choices,
+        choices=all_antares_tag_choices,
         widget=forms.CheckboxSelectMultiple,
     )
     nobs__gt = forms.IntegerField(
@@ -93,19 +85,6 @@ class ProjectForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'Max Magnitude'}),
         min_value=0.0
     )
-    """
-    criteria = forms.JSONField(
-        required=False,
-        label='Additional criteria as a Python function',
-        widget=forms.Textarea(attrs={'placeholder': 'def criteria(target):'}),
-    )
-    max_alerts = forms.IntegerField(
-        label='Maximum number of alerts to fetch',
-        widget=forms.TextInput(attrs={'placeholder': 'Max Alerts'}),
-        min_value=1,
-        initial=20
-    )
-    """
 
     # cone_search = ConeSearchField()
     # api_search_tags = forms.MultipleChoiceField(choices=get_tag_choices)

@@ -90,8 +90,6 @@ class ProjectCreateView(FormView):
         mjd_lt = parameters.get('mjd__lt')
         mag_min = parameters.get('mag__min')
         mag_max = parameters.get('mag__max')
-        ztfid = parameters.get('ztfid')
-        #max_alerts = parameters.get('max_alerts', 20)
         
         filters = []
 
@@ -168,9 +166,7 @@ class ProjectDeleteView(DeleteView):
     
     
 class RequeryBrokerView(RedirectView):
-    #template_name = 'tom_targets/target_list.html'
-    #model = ProjectTargetList
-    
+
     def save_alerts_to_group(self, project, broker):
         """Save list of alerts' targets along
         with a certain group tag."""
