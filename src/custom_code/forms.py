@@ -32,7 +32,7 @@ class ProjectForm(forms.Form):
     tns = forms.BooleanField(required=False)
     
     tags = forms.MultipleChoiceField(
-        required=False,
+        required=True,
         choices=all_antares_tag_choices,
         widget=forms.CheckboxSelectMultiple,
     )
@@ -187,19 +187,23 @@ class ProjectForm(forms.Form):
                 'Include TNS?',
                 'tns'
             ),
-            """
+        )
+        '''
             Fieldset(
                 'Max Alerts',
                 'max_alerts'
             ),
+        )
+        
             HTML('<hr/>'),
             HTML('<p style="color:blue;font-size:30px">Additional Criteria</p>'),
             Fieldset(
                  '',
                  'criteria'
             ),
-            """
+            
         )
+        '''
 
     def clean(self):
         cleaned_data = super().clean()

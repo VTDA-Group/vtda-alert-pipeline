@@ -187,6 +187,7 @@ class RequeryBrokerView(RedirectView):
         tns = project.tns
         # TODO: make this not atrocious, will be fixed when query string is not
         #directly saved to model
+
         tags = query['query']['bool']['filter'][-1]['term']['tags']
 
         n_alerts = 0

@@ -34,8 +34,10 @@ def get_sn_types():
 
 
 def check_type_tns(locus, sn_type):
+    sn_type = 'SN '+sn_type
     if 'tns_public_objects' not in locus.catalogs:
         return False
-    if 'type' not in locus.catalog_objects['tns_public_objects']:
+    if 'type' not in locus.catalog_objects['tns_public_objects'][0]:
         return False
-    return locus.catalog_objects['tns_public_objects']['type'] == sn_type
+    print(locus.catalog_objects['tns_public_objects'][0]['type'], sn_type)
+    return locus.catalog_objects['tns_public_objects'][0]['type'] == sn_type
