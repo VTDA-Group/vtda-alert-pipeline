@@ -1,0 +1,40 @@
+{% extends 'tom_common/base.html' %}
+{% load bootstrap4 %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<h1>Projects</h1>
+<div class="row">
+    <div class="col-md-10">
+        <p>
+            <a href="{% url 'custom_code:create-project' %}" class="btn btn-primary">Create New Project</a>
+        </p>
+    </div>
+</div>
+{% bootstrap_pagination page_obj extra=request.GET.urlencode %}
+<form action="{% url 'targets:list' %}" method="GET">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Group</th>
+        <th>Total Targets</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for group in object_list %}
+      <tr>
+        <td><button type="submit" class="btn btn-link" name="targetlist__name" value="{{group.id}}" title="View Group">{{ group.name }}</button></td>
+        <td valign="middle">{{ group.targets.count }}</td>
+        <td><a href="{% url 'custom_code:delete-project' group.id%}" title="Delete Project" class="btn btn-danger">Delete</a></td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td>No groups yet</td>
+        <td></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</form>
+{% bootstrap_pagination page_obj extra=request.GET.urlencode %}
+{% endblock %}

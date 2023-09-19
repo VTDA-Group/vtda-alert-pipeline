@@ -10,6 +10,7 @@ import marshmallow
 
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
 from tom_targets.models import Target, TargetName
+from tom_dataproducts.models import ReducedDatum
 
 from tom_dataproducts.models import DataProduct, ReducedDatum
 

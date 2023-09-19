@@ -1,11 +1,13 @@
 from django.db import models
-from tom_common.hooks import run_hook
-from tom_targets.models import models, Target
-# Create your models here.
 
-class ProjectTargetList(models.Model):
+from tom_common.hooks import run_hook
+from tom_targets.models import models, TargetList
+
+
+class ProjectTargetList(TargetList):
     """
     Class representing a list of targets for a specific project in a TOM.
+    Extends the TargetList class.
 
     :param name: The name of the target list
     :type name: str
@@ -18,18 +20,30 @@ class ProjectTargetList(models.Model):
     :param modified: The time at which this target list was modified in the TOM database.
     :type modified: datetime
     """
-    name = models.CharField(max_length=200, help_text='The name of the Project.')
-    targets = models.ManyToManyField(Target)
-    created = models.DateTimeField(
-        auto_now_add=True, help_text='The time which this target list was created in the TOM database.'
+    # Note from Kaylee: apparently in Django you can't override attributes of non-abstract classes!
+    # May change TargetList and ProjectTargetList to both inherit from mutual abstract class in future
+    #name = models.CharField(max_length=200, help_text='The name of the Project.')
+
+    query = models.CharField(
+        max_length=1000, help_text="This project's query submission string for ANTARES."
     )
-    modified = models.DateTimeField(
-        auto_now=True, verbose_name='Last Modified',
-        help_text='The time which this target list was changed in the TOM database.'
+    tns = models.BooleanField(
+        help_text="Whether to query TNS catalog"
+    )
+    sn_type = models.CharField(
+        max_length=100, help_text="The supernova type to check for."
     )
 
+    
     class Meta:
         ordering = ('-created', 'name',)
 
     def __str__(self):
         return self.name
+    
+    def run_criteria(self, target):
+        """Any further project criteria that can not be fed into query_params.
+        Takes in the Target object and returns boolean whether it passes criteria
+        or not.
+        """
+        pass

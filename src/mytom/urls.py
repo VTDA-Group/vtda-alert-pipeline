@@ -24,7 +24,7 @@ from custom_code.views import AboutView
 urlpatterns = [
     path('', include('tom_common.urls')),
     path('about/', AboutView.as_view(template_name='about.html'), name='about'),
-    path('custom/', include('custom_code.urls')),
+    path('', include('custom_code.urls')),
 
 ]
 
