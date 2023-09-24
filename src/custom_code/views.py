@@ -219,10 +219,9 @@ class RequeryBrokerView(RedirectView):
             try:
                 target, _, aliases = broker.to_target(alert)
                 target.save(names=aliases)
-                target_aux = TargetAux(
+                target_aux = TargetAux.create(
                     target=target
                 )
-                target_aux.save()
                 
             except IntegrityError:
                 print('Target already in database.')

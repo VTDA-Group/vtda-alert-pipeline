@@ -2,13 +2,27 @@ from django.db import models
 from django.db.models.constraints import CheckConstraint
 from django.db.models import Q
 from django.db.models import OneToOneField
+from django.conf import settings
+
+import os, shutil, glob
+import pandas as pd
+import re
+from astropy.coordinates import SkyCoord
+from astropy import units as u
+import numpy as np
+
+from astro_ghost.ghostHelperFunctions import (
+    findNewHosts
+)
 
 from tom_common.hooks import run_hook
 from tom_targets.models import Target, TargetList
 
-GHOST_CSV = "../data/ghost/GHOST.csv"
-TMP_IMAGE_DIR = "../data/tmp/host-images/"
-
+STATIC_DIR = settings.STATICFILES_DIRS[0]
+DATA_DIR = settings.MEDIA_ROOT
+GHOST_CSV = os.path.join(STATIC_DIR, "ghost/GHOST.csv")
+TMP_IMAGE_DIR = os.path.join(DATA_DIR, "tmp/host-images/")
+TMP_ASSOCIATION_DIR = os.path.join(DATA_DIR, "ghost-temp/")
 
     
 class HostGalaxy(models.Model):
@@ -86,7 +100,6 @@ class HostGalaxy(models.Model):
         
         
     
-    
 class HostGalaxyName(models.Model):
     """
     Class representing an alternative name for a ``HostGalaxy''.
@@ -147,6 +160,80 @@ class TargetAux(models.Model):
         on_delete=models.CASCADE,
         related_name="aux_info"
     )
+    
+    @classmethod
+    def create(cls, target):
+        obj = cls(target=target)
+        obj.search_for_host_galaxy()
+        obj.save()
+        return obj
+    
+    def _add_host_from_df_row(self, host):
+        host_id = host['objID']
+        host_name = host['NED_name']
+        host_ra = host['raMean']
+        host_dec = host['decMean']
+        host_obj = HostGalaxy(
+            ID = host_id,
+            name = host_name,
+            ra = host_ra,
+            dec = host_dec,
+        )
+        host_obj.save()
+        self.host = host_obj
+        self.save()
+            
+    def search_for_host_galaxy(self):
+        """Search for and add host galaxy info.
+        """
+        fullTable = pd.read_csv(GHOST_CSV)
+        host=None
+        
+        # search by transient name
+        transientName = re.sub(r"\s+", "", str(self.target.name))
+        possibleNames = [transientName, transientName.upper(), transientName.lower(), "SN"+transientName]
+        for name in possibleNames:
+            if len(fullTable[fullTable['TransientName'] == name])>0:
+                host = fullTable[fullTable['TransientName'] == name].iloc[0]
+                return self._add_host_from_df_row(host)
+        
+        # search by transient coord
+        ra, dec = self.target.ra, self.target.dec
+        transientCoord = SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
+        smallTable = fullTable[np.abs(fullTable['TransientRA'] - transientCoord.ra.degree)<0.1]
+        smallTable = smallTable[np.abs(smallTable['TransientDEC'] - transientCoord.dec.degree)<0.1]
+        if len(smallTable) > 0:
+            c2 = SkyCoord(
+                smallTable['TransientRA'].values*u.deg,
+                smallTable['TransientDEC'].values*u.deg,
+                frame='icrs'
+            )
+            sep = np.array(transientCoord.separation(c2).arcsec)
+            if np.nanmin(sep) <= 1:
+                host_idx = np.where(sep == np.nanmin(sep))[0][0]
+                host = smallTable.iloc[host_idx]
+                return self._add_host_from_df_row(host)
+            
+        # search manually
+        findNewHosts(
+            [self.target.name,],
+            [transientCoord,],
+            ['',],
+            savepath=TMP_ASSOCIATION_DIR
+        )
+        association_dir = glob.glob(os.path.join(TMP_ASSOCIATION_DIR, "*"))[0]
+        association_fn = glob.glob(
+            os.path.join(association_dir, "*/FinalAssociationTable.csv")
+        )[0]
+        
+        association_df = pd.read_csv(association_fn)
+        # delete temp folder
+        shutil.rmtree(association_dir)
+        
+        if len(association_df) > 0:
+            host = association_df.iloc[0]
+            return self._add_host_from_df_row(host)
+        return None
     
     
 class ProjectTargetList(TargetList):

@@ -28,8 +28,6 @@ SECRET_KEY = '!tq-x+hdggqjx+jzj4_hb#fo+nt++79a4@f&amp;g@3^s+i052v+&amp;h'
 DEBUG = True
 
 
-
-
 # Application definition
 
 TOM_NAME = 'TOM Toolkit'
