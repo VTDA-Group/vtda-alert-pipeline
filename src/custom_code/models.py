@@ -1,49 +1,14 @@
 from django.db import models
 from django.db.models.constraints import CheckConstraint
 from django.db.models import Q
+from django.db.models import OneToOneField
 
 from tom_common.hooks import run_hook
-from tom_targets.models import models, TargetList
-from tom_targets.models import Target as TargetOrig
+from tom_targets.models import Target, TargetList
 
-GHOST_CSV = "data/ghost/GHOST.csv"
+GHOST_CSV = "../data/ghost/GHOST.csv"
+TMP_IMAGE_DIR = "../data/tmp/host-images/"
 
-class ProjectTargetList(TargetList):
-    """
-    Class representing a list of targets for a specific project in a TOM.
-    Extends the TargetList class.
-
-    :param name: The name of the target list
-    :type name: str
-
-    :param targets: Set of ``Target`` objects associated with this ``TargetList``
-
-    :param created: The time at which this target list was created.
-    :type created: datetime
-
-    :param modified: The time at which this target list was modified in the TOM database.
-    :type modified: datetime
-    """
-    # Note from Kaylee: apparently in Django you can't override attributes of non-abstract classes!
-    # May change TargetList and ProjectTargetList to both inherit from mutual abstract class in future
-    #name = models.CharField(max_length=200, help_text='The name of the Project.')
-
-    query = models.CharField(
-        max_length=1000, help_text="This project's query submission string for ANTARES."
-    )
-    tns = models.BooleanField(
-        help_text="Whether to query TNS catalog"
-    )
-    sn_type = models.CharField(
-        max_length=100, help_text="The supernova type to check for."
-    )
-
-    
-    class Meta:
-        ordering = ('-created', 'name',)
-
-    def __str__(self):
-        return self.name
 
     
 class HostGalaxy(models.Model):
@@ -69,6 +34,7 @@ class HostGalaxy(models.Model):
         help_text="CSV file where all columns are stored.",
         default=GHOST_CSV
     )
+
     
     class Meta:
         constraints = (
@@ -83,7 +49,10 @@ class HostGalaxy(models.Model):
             ),
         )
         
-    def get_image(self, filters="grizy"):
+    def targets(self):
+        return [x.target for x in self.aux_objects]
+        
+    def upload_image(self, filters="grizy"):
         """Get color image of host galaxy.
         """
         return getcolorim(
@@ -159,20 +128,61 @@ class HostGalaxyName(models.Model):
 
 
     
-class Target(TargetOrig):
-    """Override target class to add HostGalaxy
+class TargetAux(models.Model):
+    """OneToOne buddy of Target to add HostGalaxy
     ForeignKey and related info.
     """
     host = models.ForeignKey(
         HostGalaxy,
         on_delete=models.SET_NULL,
         null=True,
+        related_name="aux_objects"
     )
     host_offset = models.FloatField(
         help_text='Angular offset between target and host galaxy.',
         null=True
     )
+    target = OneToOneField(
+        Target,
+        on_delete=models.CASCADE,
+        related_name="aux_info"
+    )
     
     
+class ProjectTargetList(TargetList):
+    """
+    Class representing a list of targets for a specific project in a TOM.
+    Extends the TargetList class.
+
+    :param name: The name of the target list
+    :type name: str
+
+    :param targets: Set of ``Target`` objects associated with this ``TargetList``
+
+    :param created: The time at which this target list was created.
+    :type created: datetime
+
+    :param modified: The time at which this target list was modified in the TOM database.
+    :type modified: datetime
+    """
+    # Note from Kaylee: apparently in Django you can't override attributes of non-abstract classes!
+    # May change TargetList and ProjectTargetList to both inherit from mutual abstract class in future
+    #name = models.CharField(max_length=200, help_text='The name of the Project.')
+
+    query = models.CharField(
+        max_length=1000, help_text="This project's query submission string for ANTARES."
+    )
+    tns = models.BooleanField(
+        help_text="Whether to query TNS catalog"
+    )
+    sn_type = models.CharField(
+        max_length=100, help_text="The supernova type to check for."
+    )
+
     
+    class Meta:
+        ordering = ('-created', 'name',)
+
+    def __str__(self):
+        return self.name
     

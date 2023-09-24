@@ -1,7 +1,7 @@
 from django.views.generic.base import RedirectView, TemplateView, View
 from django.views.generic.edit import FormView, CreateView, DeleteView
+from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from tom_observations.models import Target
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
 from tom_alerts.alerts import get_service_class, get_service_classes
@@ -11,12 +11,15 @@ from astropy.time import Time
 from guardian.mixins import PermissionListMixin
 from django_filters.views import FilterView
 from django.shortcuts import get_object_or_404
+from tom_common.mixins import Raise403PermissionRequiredMixin
 from tom_targets.filters import TargetFilter
 import antares_client
 import marshmallow
 import json
 
-from custom_code.models import ProjectTargetList
+from tom_targets.models import Target, TargetList
+from custom_code.models import ProjectTargetList, TargetAux
+
 from custom_code.forms import ProjectForm
 from custom_code.filter_helper import (
     check_type_tns,
@@ -216,6 +219,10 @@ class RequeryBrokerView(RedirectView):
             try:
                 target, _, aliases = broker.to_target(alert)
                 target.save(names=aliases)
+                target_aux = TargetAux(
+                    target=target
+                )
+                target_aux.save()
                 
             except IntegrityError:
                 print('Target already in database.')
@@ -244,3 +251,66 @@ class RequeryBrokerView(RedirectView):
         
                     
         return HttpResponseRedirect(reverse('targets:list'))
+
+    
+class TargetDetailView(Raise403PermissionRequiredMixin, DetailView):
+    """
+    View that handles the display of the target details. Requires authorization.
+    """
+    permission_required = 'tom_targets.view_target'
+    model = Target
+
+    def get_context_data(self, *args, **kwargs):
+        """
+        Adds the ``DataProductUploadForm`` to the context and prepopulates the hidden fields.
+
+        :returns: context object
+        :rtype: dict
+        """
+        context = super().get_context_data(*args, **kwargs)
+        observation_template_form = ApplyObservationTemplateForm(initial={'target': self.get_object()})
+        if any(self.request.GET.get(x) for x in ['observation_template', 'cadence_strategy', 'cadence_frequency']):
+            initial = {'target': self.object}
+            initial.update(self.request.GET)
+            observation_template_form = ApplyObservationTemplateForm(
+                initial=initial
+            )
+        observation_template_form.fields['target'].widget = HiddenInput()
+        context['observation_template_form'] = observation_template_form
+        return context
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handles the GET requests to this view. If update_status is passed into the query parameters, calls the
+        updatestatus management command to query for new statuses for ``ObservationRecord`` objects associated with this
+        target.
+
+        :param request: the request object passed to this view
+        :type request: HTTPRequest
+        """
+        update_status = request.GET.get('update_status', False)
+        if update_status:
+            if not request.user.is_authenticated:
+                return redirect(reverse('login'))
+            target_id = kwargs.get('pk', None)
+            out = StringIO()
+            call_command('updatestatus', target_id=target_id, stdout=out)
+            messages.info(request, out.getvalue())
+            add_hint(request, mark_safe(
+                              'Did you know updating observation statuses can be automated? Learn how in'
+                              '<a href=https://tom-toolkit.readthedocs.io/en/stable/customization/automation.html>'
+                              ' the docs.</a>'))
+            return redirect(reverse('tom_targets:detail', args=(target_id,)))
+
+        obs_template_form = ApplyObservationTemplateForm(request.GET)
+        if obs_template_form.is_valid():
+            obs_template = ObservationTemplate.objects.get(pk=obs_template_form.cleaned_data['observation_template'].id)
+            obs_template_params = obs_template.parameters
+            obs_template_params['cadence_strategy'] = request.GET.get('cadence_strategy', '')
+            obs_template_params['cadence_frequency'] = request.GET.get('cadence_frequency', '')
+            params = urlencode(obs_template_params)
+            return redirect(
+                reverse('tom_observations:create',
+                        args=(obs_template.facility,)) + f'?target_id={self.get_object().id}&' + params)
+
+        return super().get(request, *args, **kwargs)
