@@ -16,16 +16,106 @@ import antares_client
 import marshmallow
 import json
 
-from custom_code.models import ProjectTargetList
+from custom_code.models import (
+    ProjectTargetList,
+    QuerySet,
+    QueryProperty,
+    QueryTag
+)
+
 from custom_code.forms import ProjectForm
 from custom_code.filter_helper import (
     check_type_tns,
     run_anomaly_tag,
     tns_label_dict,
 )
-    
 
+def save_params_as_queryset(parameters, project):
+    """Converts query dictionary to string for easy saving. Copied over
+    from tom_antares."""
+    tags = parameters.get('tags')
+    nobs_gt = parameters.get('nobs__gt')
+    nobs_lt = parameters.get('nobs__lt')
+    sra = parameters.get('ra')
+    sdec = parameters.get('dec')
+    ssr = parameters.get('sr')
+    mjd_gt = parameters.get('mjd__gt')
+    mjd_lt = parameters.get('mjd__lt')
+    mag_min = parameters.get('mag__min')
+    mag_max = parameters.get('mag__max')
 
+    # default values
+    if nobs_gt is None:
+        nobs_gt = 0
+    if nobs_lt is None:
+        nobs_lt = 1e10
+    if mjd_gt is None:
+        mjd_gt = 0.0
+    if mjd_lt is None:
+        mjd_lt = 1e10
+    if mag_min is None:
+        mag_min = 0
+    if mag_max is None:
+        mag_max = 40
+
+    qs = project.queryset
+
+    nobs_prop = QueryProperty(
+        antares_name="num_mag_values",
+        min_value = nobs_gt,
+        max_value = nobs_lt,
+        queryset = qs
+    )
+    nobs_prop.save()
+
+    mjd_prop = QueryProperty(
+        antares_name="newest_alert_observation_time",
+        min_value = 0.0,
+        max_value = mjd_lt,
+        queryset = qs
+    )
+    mjd_prop.save()
+
+    mjd_prop2 = QueryProperty(
+        antares_name="oldest_alert_observation_time",
+        min_value = mjd_gt,
+        max_value = 1e10,
+        queryset = qs
+    )
+    mjd_prop2.save()
+
+    mag_prop = QueryProperty(
+        antares_name="newest_alert_magnitude",
+        min_value = mag_min,
+        max_value = mag_max,
+        queryset = qs
+    )
+    mag_prop.save()
+
+    sra_prop = QueryProperty(
+        antares_name="ra",
+        min_value = sra-ssr,
+        max_value = sra+ssr,
+        queryset = qs
+    )
+    sra_prop.save()
+
+    sdec_prop = QueryProperty(
+        antares_name="dec",
+        min_value = sdec-ssr,
+        max_value = sdec+ssr,
+        queryset = qs
+    )
+    sdec_prop.save()
+
+    if tags:
+        tag = QueryTag(
+        antares_name=tags[0],
+        queryset = qs
+    )
+    tag.save()
+        
+        
 class AboutView(TemplateView):
     template_name = 'about.html'
 
@@ -82,66 +172,6 @@ class ProjectCreateView(FormView):
     template_name = 'tom_targets/project_form.html'
     success_url = reverse_lazy('custom_code:projects')
 
-
-    def generate_query_string(self, parameters):
-        """Converts query dictionary to string for easy saving. Copied over
-        from tom_antares."""
-        tags = parameters.get('tags')
-        nobs_gt = parameters.get('nobs__gt')
-        nobs_lt = parameters.get('nobs__lt')
-        sra = parameters.get('ra')
-        sdec = parameters.get('dec')
-        ssr = parameters.get('sr')
-        mjd_gt = parameters.get('mjd__gt')
-        mjd_lt = parameters.get('mjd__lt')
-        mag_min = parameters.get('mag__min')
-        mag_max = parameters.get('mag__max')
-        
-        filters = []
-
-        if nobs_gt or nobs_lt:
-            nobs_range = {"range": {"properties.num_mag_values": {}}}
-            if nobs_gt:
-                nobs_range["range"]["properties.num_mag_values"]["gte"] = nobs_gt
-            if nobs_lt:
-                nobs_range["range"]["properties.num_mag_values"]["lte"] = nobs_lt
-            filters.append(nobs_range)
-
-        if mjd_lt:
-            mjd_lt_range = {"range": {"properties.newest_alert_observation_time": {"lte": mjd_lt}}}
-            filters.append(mjd_lt_range)
-
-        if mjd_gt:
-            mjd_gt_range = {"range": {"properties.oldest_alert_observation_time": {"gte": mjd_gt}}}
-            filters.append(mjd_gt_range)
-
-        if mag_min or mag_max:
-            mag_range = {"range": {"properties.newest_alert_magnitude": {}}}
-            if mag_min:
-                mag_range["range"]["properties.newest_alert_magnitude"]["gte"] = mag_min
-            if mag_max:
-                mag_range["range"]["properties.newest_alert_magnitude"]["lte"] = mag_max
-            filters.append(mag_range)
-
-        if sra and ssr:  # TODO: add cross-field validation
-            ra_range = {"range": {"ra": {"gte": sra-ssr, "lte": sra+ssr}}}
-            filters.append(ra_range)
-
-        if sdec and ssr:  # TODO: add cross-field validation
-            dec_range = {"range": {"dec": {"gte": sdec-ssr, "lte": sdec+ssr}}}
-            filters.append(dec_range)
-
-        if tags:
-            filters.append({"term": {"tags": tags[0]}})
-
-        query = {
-                "query": {
-                    "bool": {
-                        "filter": filters
-                    }
-                }
-            }
-        return json.dumps(query)
             
     def form_valid(self, form):
         """
@@ -151,17 +181,23 @@ class ProjectCreateView(FormView):
         :type form: django.forms.ModelForm
         """
         param_dict = form.cleaned_data
-        query_str = self.generate_query_string(param_dict)
         name = form.cleaned_data['project_name']
         tns = form.cleaned_data['tns']
         sn_type = form.cleaned_data['sn_type']
+    
         project = ProjectTargetList(
             name=name,
             tns=tns,
             sn_type=sn_type,
-            query=query_str,
         )
         project.save()
+
+        qs = QuerySet(
+            name=f"qs_{name}",
+            project=project,
+        )
+        qs.save()
+        save_params_as_queryset(param_dict, project)
         return super().form_valid(form)
 
     
@@ -181,20 +217,23 @@ class RequeryBrokerView(RedirectView):
         """Save list of alerts' targets along
         with a certain group tag."""
         MAX_ALERTS = 20
-        query = json.loads(project.query)
+        query = project.queryset.generate_antares_query()
+        print(query)
         loci = antares_client.search.search(query)
         sn_type = project.sn_type[2:-2] # TODO: fix this
         tns = project.tns
         # TODO: make this not atrocious, will be fixed when query string is not
         #directly saved to model
 
-        tags = query['query']['bool']['filter'][-1]['term']['tags']
+        tag_objs = project.queryset.get_all_tags()
+        tags = [tag_obj.antares_name for tag_obj in tag_objs]
 
         n_alerts = 0
         while n_alerts < MAX_ALERTS:
             try:
                 locus = next(loci)
             except (marshmallow.exceptions.ValidationError, StopIteration):
+                print("no more loci")
                 break
                 
             #bandaid solution
