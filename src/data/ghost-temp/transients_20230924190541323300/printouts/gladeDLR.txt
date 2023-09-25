@@ -1,8 +1,0 @@
-
- transient = \
-ZTF17aabrylk
-offset/DLR = \
-{'WISEA J091903.76+234142.6': 151.91, 'WISEA J091917.12+240059.1': 601.39}
-candidate semi-major axis = \
-{'WISEA J091903.76+234142.6': 3.41, 'WISEA J091917.12+240059.1': 1.38}
-No host chosen! r/DLR > 5.0.
