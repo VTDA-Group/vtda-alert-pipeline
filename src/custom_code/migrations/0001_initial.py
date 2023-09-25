@@ -63,4 +63,40 @@ class Migration(migrations.Migration):
             model_name='hostgalaxy',
             constraint=models.CheckConstraint(check=models.Q(('dec__gte', -180.0), ('dec__lte', 180.0)), name='host_dec_range'),
         ),
+        migrations.CreateModel(
+            name='QuerySet',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='The query name', max_length=100)),
+                ('project', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='custom_code.projecttargetlist')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='QueryTag',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('antares_name', models.CharField(help_text='The tag name when queried from ANTARES', max_length=100)),
+                ('queryset', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='custom_code.queryset')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='QueryProperty',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('antares_name', models.CharField(help_text='The property name when queried from ANTARES', max_length=100)),
+                ('min_value', models.FloatField(help_text='Minimum value', null=True)),
+                ('max_value', models.FloatField(help_text='Maximum value', null=True)),
+                ('categorical', models.BooleanField(default=False, help_text='Whether property value is categorical (as opposed to continuous)')),
+                ('target_value', models.CharField(help_text='Target property value if categorical', max_length=100, null=True)),
+                ('queryset', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='custom_code.queryset')),
+            ],
+        ),
+        migrations.AddConstraint(
+            model_name='querytag',
+            constraint=models.UniqueConstraint(fields=('queryset', 'antares_name'), name='no_repeat_query_tags'),
+        ),
+        migrations.AddConstraint(
+            model_name='queryproperty',
+            constraint=models.UniqueConstraint(fields=('queryset', 'antares_name'), name='no_repeat_query_properties'),
+        ),
     ]
