@@ -1,10 +1,11 @@
 <div class="row">
-  <div class="col-md-6">
-    <h4>Host Info</h4>
-  </div>
-  <div class="col-md-6">
-      <p>Host Name: {{host_name}}</p>
-      <p>Host RA: {{host_ra}}</p>
-      <p>Host DEC: {{host_dec}}</p>
-  </div>
+    <img src="data:image/png;base64,{{ image|safe }}">
+    <div class="col-md-6">
+        <p>Host Name: {{host_name}}</p>
+        <p>Host RA: {{host_ra}}</p>
+        <p>Host DEC: {{host_dec}}</p>
+    </div>
+</div>
+<div class="light-curve">
+    {{ spectra|safe }}
 </div>

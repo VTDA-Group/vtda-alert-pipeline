@@ -10,13 +10,21 @@ import re
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 import numpy as np
+import requests
+from PIL import Image
+from io import BytesIO
+
 
 from astro_ghost.ghostHelperFunctions import (
-    findNewHosts
+    findNewHosts,
+    getcolorim,
+    geturl
 )
+from astroquery.ipac.ned import Ned
 
 from tom_common.hooks import run_hook
 from tom_targets.models import Target, TargetList
+from tom_dataproducts.models import ReducedDatum
 
 STATIC_DIR = settings.STATICFILES_DIRS[0]
 DATA_DIR = settings.MEDIA_ROOT
@@ -63,25 +71,53 @@ class HostGalaxy(models.Model):
             ),
         )
         
-    def targets(self):
-        return [x.target for x in self.aux_objects]
         
-    def upload_image(self, filters="grizy"):
+    @classmethod
+    def create(cls, ID, name, ra, dec):
+        obj = cls(
+            ID=ID,
+            name=name,
+            ra=ra,
+            dec=dec
+        )
+        obj.save()
+        return obj
+    
+        
+    def targets(self):
+        return [x.target for x in self.aux_objects.all()]
+        
+    def add_image(self, filters="grizy"):
         """Get color image of host galaxy.
         """
-        return getcolorim(
-            self.ra,
-            self.dec,
-            filters
-        )
+        url = geturl(self.ra,self.dec,filters=filters,format="png",color=True, type='stack')
+        r = requests.get(url)
+        im = Image.open(BytesIO(r.content))
+        return im     
     
-    def get_spectra(self):
+    def add_spectra(self):
         """Get spectra (list) of host galaxy,
-        if available.
+        if available, and save as ReducedDatum objects.
         """
+        
         try:
             spectra = Ned.get_spectra(self.name)
-            return spectra
+            
+            spec_data = []
+            for spectrum in spectra:
+                arr = spectrum[0].data.astype('float')
+                header = spectrum[0].header
+
+                flux = list(arr[0])
+                flux_err = list(arr[2])
+
+                wv0 = 10**header["COEFF0"]
+                delta_wv = 10**header["COEFF1"]
+                wv = [wv0 + i*delta_wv for i in range(len(flux))]
+                spec_data.append([wv, flux, flux_err])
+                
+            return spec_data
+
         except:
             return None
         
@@ -173,13 +209,12 @@ class TargetAux(models.Model):
         host_name = host['NED_name']
         host_ra = host['raMean']
         host_dec = host['decMean']
-        host_obj = HostGalaxy(
+        host_obj = HostGalaxy.create(
             ID = host_id,
             name = host_name,
             ra = host_ra,
             dec = host_dec,
         )
-        host_obj.save()
         self.host = host_obj
         self.save()
             
