@@ -166,8 +166,9 @@ def update_all_hosts():
     )
     
     # delete temp directory
-    association_dir = glob.glob(os.path.join(TMP_ASSOCIATION_DIR, "*"))[0]
-    shutil.rmtree(association_dir)
+    association_dirs = glob.glob(os.path.join(TMP_ASSOCIATION_DIR, "*"))
+    for association_dir in association_dirs:
+        shutil.rmtree(association_dir)
     
     for i in range(len(hostDB)):
         try:
