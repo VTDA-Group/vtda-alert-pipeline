@@ -1,0 +1,56 @@
+
+ transient = \
+ZTF17aadpvsc
+offset/DLR = \
+{143491024708121519: 25.23, 143511024582200041: 6.63}
+candidate semi-major axis = \
+{143491024708121519: 2.23, 143511024582200041: 3.63}
+No host chosen! r/DLR > 5.0.
+
+ transient = \
+ZTF18aabgqqp
+offset/DLR = \
+{152670973243313990: 15.67}
+candidate semi-major axis = \
+{152670973243313990: 2.47}
+No host chosen! r/DLR > 5.0.
+
+ transient = \
+ZTF19adgjijf
+offset/DLR = \
+{109050740193937448: 9.06, 109060740056911354: 8.1, 109060740060436830: 19.28}
+candidate semi-major axis = \
+{109050740193937448: 3.15, 109060740056911354: 4.38, 109060740060436830: 2.4}
+No host chosen! r/DLR > 5.0.
+
+ transient = \
+ZTF17aacutne
+offset/DLR = \
+{129610775236642611: 24.99}
+candidate semi-major axis = \
+{129610775236642611: 2.02}
+No host chosen! r/DLR > 5.0.
+
+ transient = \
+ZTF18aczvzus
+offset/DLR = \
+{109030914412591893: 14.43, 109030914424643549: 14.42, 109040914426653124: 14.13, 109040914436611453: 14.72}
+candidate semi-major axis = \
+{109030914412591893: 2.06, 109030914424643549: 2.05, 109040914426653124: 2.05, 109040914436611453: 2.05}
+No host chosen! r/DLR > 5.0.
+
+ transient = \
+ZTF18abmsmuf
+offset/DLR = \
+{143630872453202621: 21.93}
+candidate semi-major axis = \
+{143630872453202621: 2.15}
+No host chosen! r/DLR > 5.0.
+
+ transient = \
+ZTF18aaadvzr
+offset/DLR = \
+{166970556666853824: 22.4, 166980556562923865: 5.82}
+candidate semi-major axis = \
+{166970556666853824: 2.25, 166980556562923865: 2.27}
+No host chosen! r/DLR > 5.0.

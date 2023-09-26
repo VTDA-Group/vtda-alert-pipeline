@@ -161,6 +161,7 @@ def update_all_hosts():
         snClass=['']*len(coords),
         savepath=TMP_ASSOCIATION_DIR,
         GHOSTpath=GHOST_PATH,
+        redo_search=False,
         verbose=1
     )
     

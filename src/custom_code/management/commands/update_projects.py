@@ -13,7 +13,7 @@ from custom_code.models import (
     ProjectTargetList,
 )
 
-class ProjectUpdateCommand(BaseCommand):
+class Command(BaseCommand):
 
     help = 'Performs an automatic nightly requery for all existing projects.'
 
