@@ -28,7 +28,7 @@ from tom_dataproducts.models import ReducedDatum
 
 STATIC_DIR = settings.STATICFILES_DIRS[0]
 DATA_DIR = settings.MEDIA_ROOT
-GHOST_CSV = os.path.join(STATIC_DIR, "ghost/GHOST.csv")
+GHOST_CSV = os.path.join(STATIC_DIR, "ghost/database/GHOST.csv")
 TMP_IMAGE_DIR = os.path.join(DATA_DIR, "tmp/host-images/")
 TMP_ASSOCIATION_DIR = os.path.join(DATA_DIR, "ghost-temp/")
 
@@ -197,9 +197,10 @@ class TargetAux(models.Model):
     )
     
     @classmethod
-    def create(cls, target):
+    def create(cls, target, add_host=True):
         obj = cls(target=target)
-        obj.search_for_host_galaxy()
+        if add_host:
+            obj.search_for_host_galaxy()
         obj.save()
         return obj
     

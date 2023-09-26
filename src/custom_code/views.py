@@ -3,17 +3,14 @@ from django.views.generic.edit import FormView, CreateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import IntegrityError
 from tom_alerts.alerts import get_service_class, get_service_classes
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
 from astropy.time import Time
 from guardian.mixins import PermissionListMixin
 from django_filters.views import FilterView
-from django.shortcuts import get_object_or_404
 from tom_common.mixins import Raise403PermissionRequiredMixin
 from tom_targets.filters import TargetFilter
-import antares_client
 import marshmallow
 import json
 
@@ -32,6 +29,8 @@ from custom_code.filter_helper import (
     check_type_tns,
     run_anomaly_tag,
     tns_label_dict,
+    save_alerts_to_group,
+    update_all_hosts
 )
 
 def save_params_as_queryset(parameters, project):
@@ -216,66 +215,6 @@ class ProjectDeleteView(DeleteView):
     
     
 class RequeryBrokerView(RedirectView):
-
-    def save_alerts_to_group(self, project, broker):
-        """Save list of alerts' targets along
-        with a certain group tag."""
-        MAX_ALERTS = 20
-        query = project.queryset.generate_antares_query()
-        print(query)
-        loci = antares_client.search.search(query)
-        sn_type = project.sn_type[2:-2] # TODO: fix this
-        tns = project.tns
-        # TODO: make this not atrocious, will be fixed when query string is not
-        #directly saved to model
-
-        tag_objs = project.queryset.get_all_tags()
-        tags = [tag_obj.antares_name for tag_obj in tag_objs]
-
-        n_alerts = 0
-        while n_alerts < MAX_ALERTS:
-            try:
-                locus = next(loci)
-            except (marshmallow.exceptions.ValidationError, StopIteration):
-                print("no more loci")
-                break
-                
-            #bandaid solution
-            # TODO: fix
-            if sn_type not in ['None', '']:
-                skippy = True
-                if tns and check_type_tns(locus, tns_label_dict[sn_type]):
-                    skippy = False
-                if ('superphot_plus_class' in locus.properties) & ('superphot_plus_classified' in tags):
-                    if locus.properties['superphot_plus_class'] == sn_type:
-                        skippy = False
-                if 'LAISS_RFC_AD_filter' in tags:
-                    if self.run_anomaly_tag(locus):
-                        skippy = False
-                if skippy:
-                    continue
-                    
-            alert = broker.alert_to_dict(locus)
-            try:
-                target, _, aliases = broker.to_target(alert)
-                target.save(names=aliases)
-                target_aux = TargetAux.create(
-                    target=target
-                )
-                
-            except IntegrityError:
-                print('Target already in database.')
-                target = get_object_or_404(
-                    Target,
-                    name=alert['properties']['ztf_object_id']
-                )
-            try:
-                project.targets.add(target)
-                n_alerts += 1   
-            except:
-                print('Error saving target to project')
-
-           
                     
         
     def get(self, request, *args, **kwargs):
@@ -286,8 +225,9 @@ class RequeryBrokerView(RedirectView):
         broker = get_service_class(broker_name)()
         
         for project in ProjectTargetList.objects.all():
-            self.save_alerts_to_group(project, broker)
-        
+            save_alerts_to_group(project, broker)
+            
+        update_all_hosts()
                     
         return HttpResponseRedirect(reverse('targets:list'))
 

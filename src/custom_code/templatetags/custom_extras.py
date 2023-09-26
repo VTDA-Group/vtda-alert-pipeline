@@ -41,10 +41,6 @@ def host_info_for_target(context, target):
     host = target.aux_info.host
     
     if host is None:
-        target.aux_info.search_for_host_galaxy()
-        host = target.aux_info.host
-    
-    if host is None:
         host_name = "N/A"
         host_ra = "N/A"
         host_dec = "N/A"
