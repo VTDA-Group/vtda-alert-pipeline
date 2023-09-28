@@ -35,13 +35,8 @@ def all_antares_tag_choices():
     for s in extra_antares_tags():
         choices.append((s['id'], s['id']))
     return choices
+ 
     
-    
-def run_anomaly_tag(locus):
-    """Check if object is considered an anomaly."""
-    return locus.properties['LAISS_RFC_anomaly_score'] > 25
-
-
 def get_sn_types():
     """Return list of supernova type choices for the Project form."""
     sn_type_selection = [(s, s) for s in superphot_types]
@@ -59,7 +54,6 @@ def check_type_tns(locus, sn_type):
     return locus.catalog_objects['tns_public_objects'][0]['type'] == sn_type
 
 
-
 def save_alerts_to_group(project, broker):
     """Save list of alerts' targets along
     with a certain group tag."""
@@ -72,7 +66,7 @@ def save_alerts_to_group(project, broker):
     # TODO: make this not atrocious, will be fixed when query string is not
     #directly saved to model
 
-    tag_objs = project.queryset.get_all_tags()
+    tag_objs = project.queryset.tags.all()
     tags = [tag_obj.antares_name for tag_obj in tag_objs]
 
     n_alerts = 0
@@ -92,9 +86,6 @@ def save_alerts_to_group(project, broker):
             if ('superphot_plus_class' in locus.properties) & ('superphot_plus_classified' in tags):
                 if locus.properties['superphot_plus_class'] == sn_type:
                     skippy = False
-            if 'LAISS_RFC_AD_filter' in tags:
-                if run_anomaly_tag(locus):
-                    skippy = False
             if skippy:
                 continue
 
@@ -105,6 +96,7 @@ def save_alerts_to_group(project, broker):
             target_aux = TargetAux.create(
                 target=target, add_host=False
             )
+            broker.process_reduced_data(target)
 
         except IntegrityError:
             print('Target already in database.')

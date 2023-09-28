@@ -51,18 +51,21 @@ def host_info_for_target(context, target):
         host.add_spectra()
         
     # get spectrum
-    datums = host.add_spectra()
+    if host is not None:
+        datums = host.add_spectra()
+    else:
+        datums = []
         
     plot_data = []
     for value in datums:
-       
+
         plot_data.append(
             go.Scatter(
                 x=value[0],
                 y=value[1],
             )
         )
-        
+
     layout = go.Layout(
         height=600,
         width=700,

@@ -14,6 +14,8 @@ from tom_targets.filters import TargetFilter
 import marshmallow
 import json
 
+from tom_alerts import alerts
+
 from tom_targets.models import Target, TargetList
 
 from custom_code.models import (
@@ -112,11 +114,20 @@ def save_params_as_queryset(parameters, project):
     sdec_prop.save()
 
     if tags:
-        tag = QueryTag(
-        antares_name=tags[0],
-        queryset = qs
-    )
-    tag.save()
+        for t in tags:
+            tag = QueryTag(
+                antares_name=t,
+                queryset = qs
+            )
+            tag.save()
+        
+    if 'LAISS_RFC_AD_filter' in tags:
+        anom_prop = QueryProperty(
+            antares_name="LAISS_RFC_anomaly_score",
+            min_value = 25.0,
+            queryset = qs
+        )
+        anom_prop.save()
         
         
 class AboutView(TemplateView):

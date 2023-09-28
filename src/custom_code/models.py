@@ -316,31 +316,13 @@ class QuerySet(models.Model):
     project = models.OneToOneField(
         ProjectTargetList, on_delete=models.CASCADE
     )
-
-    def get_all_properties(self):
-        """Get all associated QueryProperty objects.
-        """
-        properties = []
-        for query_property in QueryProperty.objects.all():
-            if query_property.queryset == self:
-                properties.append(query_property)
-        return properties
-    
-    def get_all_tags(self):
-        """Get all associated QueryTag objects.
-        """
-        tags = []
-        for query_tag in QueryTag.objects.all():
-            if query_tag.queryset == self:
-                tags.append(query_tag)
-        return tags
     
     def generate_antares_query(self):
         """Generate ANTARES query string from
         properties and tags.
         """
-        props = self.get_all_properties()
-        tags = self.get_all_tags()
+        props = self.properties.all()
+        tags = self.tags.all()
         
         # TODO: allow for ORs (at moment it's all ANDs)
         query = {
@@ -387,7 +369,8 @@ class QueryProperty(models.Model):
         null=True,
     )
     queryset = models.ForeignKey(
-        QuerySet, on_delete=models.CASCADE
+        QuerySet, on_delete=models.CASCADE,
+        related_name='properties'
     )
     
     class Meta: # assert no repeat properties per QuerySet
@@ -438,7 +421,8 @@ class QueryTag(models.Model):
         help_text="The tag name when queried from ANTARES"
     )
     queryset = models.ForeignKey(
-        QuerySet, on_delete=models.CASCADE
+        QuerySet, on_delete=models.CASCADE,
+        related_name='tags'
     )
     
     class Meta: # assert no repeat properties per QuerySet
