@@ -1,5 +1,5 @@
 {% extends 'tom_common/base.html' %}
-{% load comments bootstrap4 tom_common_extras targets_extras observation_extras dataproduct_extras static cache %}
+{% load comments bootstrap4 tom_common_extras targets_extras observation_extras dataproduct_extras custom_extras static cache %}
 {% block title %}Target {{ object.name }}{% endblock %}
 {% block additional_css %}
 <link rel="stylesheet" href="{% static 'tom_common/css/main.css' %}">
@@ -62,6 +62,9 @@ $(document).ready(function(){
       <li class="nav-item">
         <a class="nav-link" id="spectroscopy-tab" href="#spectroscopy" role="tab" data-toggle="tab">Spectroscopy</a>
       </li>
+        <li class="nav-item">
+        <a class="nav-link" id="host-tab" href="#host" role="tab" data-toggle="tab">Host Galaxy</a>
+      </li>
     </ul>
     <div class="tab-content">
       <div class="tab-pane" id="observe">
@@ -98,6 +101,9 @@ $(document).ready(function(){
         </div>
       <div class="tab-pane" id="spectroscopy">
         {% spectroscopy_for_target target %}
+      </div>
+      <div class="tab-pane" id="host">
+        {% host_info_for_target target %}
       </div>
 
       {% comments_enabled as comments_are_enabled %}

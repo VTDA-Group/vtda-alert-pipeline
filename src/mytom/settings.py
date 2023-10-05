@@ -28,13 +28,12 @@ SECRET_KEY = '!tq-x+hdggqjx+jzj4_hb#fo+nt++79a4@f&amp;g@3^s+i052v+&amp;h'
 DEBUG = True
 
 
-
-
 # Application definition
 
 TOM_NAME = 'TOM Toolkit'
 
 INSTALLED_APPS = [
+    'custom_code',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,8 +58,7 @@ INSTALLED_APPS = [
     'tom_observations',
     'tom_dataproducts',
     'tom_setup',
-    'tom_antares',
-    'custom_code'
+    'tom_antares', 
     ]
 
 SITE_ID = 1
@@ -229,7 +227,8 @@ DATA_PRODUCT_TYPES = {
     'photometry': ('photometry', 'Photometry'),
     'fits_file': ('fits_file', 'FITS File'),
     'spectroscopy': ('spectroscopy', 'Spectroscopy'),
-    'image_file': ('image_file', 'Image File')
+    'image_file': ('image_file', 'Image File'),
+    'host_spectroscopy': ('host_spectroscopy', 'Host Spectroscopy'),
 }
 
 DATA_PROCESSORS = {

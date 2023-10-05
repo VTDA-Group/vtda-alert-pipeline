@@ -3,3 +3,4 @@ pytest-cov
 numpy
 jax
 jaxlib
+astro_ghost
