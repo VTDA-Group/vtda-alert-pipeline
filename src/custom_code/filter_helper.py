@@ -3,6 +3,7 @@ import antares_client
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 from astro_ghost.ghostHelperFunctions import getTransientHosts
+import marshmallow
 
 from django.conf import settings
 from django.db import IntegrityError

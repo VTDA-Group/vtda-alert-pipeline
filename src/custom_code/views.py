@@ -29,7 +29,6 @@ from custom_code.models import (
 from custom_code.forms import ProjectForm
 from custom_code.filter_helper import (
     check_type_tns,
-    run_anomaly_tag,
     tns_label_dict,
     save_alerts_to_group,
     update_all_hosts
