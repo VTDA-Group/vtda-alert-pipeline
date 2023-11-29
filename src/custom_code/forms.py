@@ -17,23 +17,23 @@ from crispy_forms.layout import Div, Layout, Submit, Fieldset, HTML
 from tom_observations.models import ObservationRecord
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
 from tom_targets.models import Target, TargetName
+from tom_antares.antares import get_tag_choices
+
 from custom_code.models import ProjectTargetList
 from custom_code.filter_helper import (
-    all_antares_tag_choices,
     get_sn_types
 )
 
 
 class ProjectForm(forms.Form):
-
     # define form content
     project_name = forms.CharField(required=True)
     sn_type = forms.MultipleChoiceField(required=False, choices=get_sn_types)
     tns = forms.BooleanField(required=False)
-    
+
     tags = forms.MultipleChoiceField(
         required=True,
-        choices=all_antares_tag_choices,
+        choices=get_tag_choices,
         widget=forms.CheckboxSelectMultiple,
     )
     nobs__gt = forms.IntegerField(
@@ -127,8 +127,8 @@ class ProjectForm(forms.Form):
                         css_class='col',
                     ),
                     css_class='form-row'
-                    )
-                ),
+                )
+            ),
             Fieldset(
                 'Number of measurements',
                 Div(
