@@ -28,7 +28,11 @@ from custom_code.filter_helper import (
 class ProjectForm(forms.Form):
     # define form content
     project_name = forms.CharField(required=True)
-    sn_type = forms.MultipleChoiceField(required=False, choices=get_sn_types)
+    sn_types = forms.MultipleChoiceField(
+        required=False,
+        choices=get_sn_types,
+        widget=forms.CheckboxSelectMultiple,
+    )
     tns = forms.BooleanField(required=False)
 
     tags = forms.MultipleChoiceField(
@@ -181,7 +185,7 @@ class ProjectForm(forms.Form):
             ),
             Fieldset(
                 'Specific Type?',
-                'sn_type'
+                'sn_types'
             ),
             Fieldset(
                 'Include TNS?',

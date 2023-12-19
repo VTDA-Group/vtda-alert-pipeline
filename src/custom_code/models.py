@@ -14,7 +14,6 @@ import requests
 from PIL import Image
 from io import BytesIO
 
-
 from astro_ghost.ghostHelperFunctions import (
     findNewHosts,
     getcolorim,
@@ -32,7 +31,7 @@ GHOST_CSV = os.path.join(STATIC_DIR, "ghost/database/GHOST.csv")
 TMP_IMAGE_DIR = os.path.join(DATA_DIR, "tmp/host-images/")
 TMP_ASSOCIATION_DIR = os.path.join(DATA_DIR, "ghost-temp/")
 
-    
+
 class HostGalaxy(models.Model):
     """Represents a Host Galaxy.
     """
@@ -57,7 +56,6 @@ class HostGalaxy(models.Model):
         default=GHOST_CSV
     )
 
-    
     class Meta:
         constraints = (
             # for checking in the DB
@@ -70,8 +68,7 @@ class HostGalaxy(models.Model):
                 name='host_dec_range'
             ),
         )
-        
-        
+
     @classmethod
     def create(cls, ID, name, ra, dec):
         obj = cls(
@@ -82,27 +79,26 @@ class HostGalaxy(models.Model):
         )
         obj.save()
         return obj
-    
-        
+
     def targets(self):
         return [x.target for x in self.aux_objects.all()]
-        
+
     def add_image(self, filters="grizy"):
         """Get color image of host galaxy.
         """
-        url = geturl(self.ra,self.dec,filters=filters,format="png",color=True, type='stack')
+        url = geturl(self.ra, self.dec, filters=filters, format="png", color=True, type='stack')
         r = requests.get(url)
         im = Image.open(BytesIO(r.content))
-        return im     
-    
+        return im
+
     def add_spectra(self):
         """Get spectra (list) of host galaxy,
         if available, and save as ReducedDatum objects.
         """
-        
+
         try:
             spectra = Ned.get_spectra(self.name)
-            
+
             spec_data = []
             for spectrum in spectra:
                 arr = spectrum[0].data.astype('float')
@@ -111,16 +107,17 @@ class HostGalaxy(models.Model):
                 flux = list(arr[0])
                 flux_err = list(arr[2])
 
-                wv0 = 10**header["COEFF0"]
-                delta_wv = 10**header["COEFF1"]
-                wv = [wv0 + i*delta_wv for i in range(len(flux))]
+                wv0 = 10 ** header["COEFF0"]
+                delta_wv = 10 ** header["COEFF1"]
+                wv = [wv0 + i * delta_wv for i in range(len(flux))]
                 spec_data.append([wv, flux, flux_err])
-                
+
             return spec_data
 
-        except:
-            return None
-        
+        except Exception as e:
+            print("Obtained error when trying to get spectra. Return empty list for now: ", e)
+            return []
+
     def query_from_csv(self, columns=None):
         """Query any properties not included in Model
         object from host CSV. If columns is None, return
@@ -128,14 +125,13 @@ class HostGalaxy(models.Model):
         """
         df = pd.read_csv(self.catalog)
         host_df = df[df['NED_name'] == self.name]
-        
+
         if columns is not None:
             return host_df[columns]
-        
+
         return host_df
-        
-        
-    
+
+
 class HostGalaxyName(models.Model):
     """
     Class representing an alternative name for a ``HostGalaxy''.
@@ -149,6 +145,7 @@ class HostGalaxyName(models.Model):
         auto_now=True, verbose_name='Last Modified',
         help_text='The time at which this host name was changed in the TOM database.'
     )
+
     def __str__(self):
         return self.name
 
@@ -175,7 +172,7 @@ class HostGalaxyName(models.Model):
         if matches:
             raise ValidationError(f'Host with Name or alias similar to {self.name} already exists')
 
-    
+
 class TargetAux(models.Model):
     """OneToOne buddy of Target to add HostGalaxy
     ForeignKey and related info.
@@ -195,7 +192,7 @@ class TargetAux(models.Model):
         on_delete=models.CASCADE,
         related_name="aux_info"
     )
-    
+
     @classmethod
     def create(cls, target, add_host=True):
         obj = cls(target=target)
@@ -203,44 +200,44 @@ class TargetAux(models.Model):
             obj.search_for_host_galaxy()
         obj.save()
         return obj
-    
+
     def _add_host_from_df_row(self, host):
         host_id = host['objID']
         host_name = host['NED_name']
         host_ra = host['raMean']
         host_dec = host['decMean']
         host_obj = HostGalaxy.create(
-            ID = host_id,
-            name = host_name,
-            ra = host_ra,
-            dec = host_dec,
+            ID=host_id,
+            name=host_name,
+            ra=host_ra,
+            dec=host_dec,
         )
         self.host = host_obj
         self.save()
-            
+
     def search_for_host_galaxy(self):
         """Search for and add host galaxy info.
         """
         fullTable = pd.read_csv(GHOST_CSV)
-        host=None
-        
+        host = None
+
         # search by transient name
         transientName = re.sub(r"\s+", "", str(self.target.name))
-        possibleNames = [transientName, transientName.upper(), transientName.lower(), "SN"+transientName]
+        possibleNames = [transientName, transientName.upper(), transientName.lower(), "SN" + transientName]
         for name in possibleNames:
-            if len(fullTable[fullTable['TransientName'] == name])>0:
+            if len(fullTable[fullTable['TransientName'] == name]) > 0:
                 host = fullTable[fullTable['TransientName'] == name].iloc[0]
                 return self._add_host_from_df_row(host)
-        
+
         # search by transient coord
         ra, dec = self.target.ra, self.target.dec
-        transientCoord = SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
-        smallTable = fullTable[np.abs(fullTable['TransientRA'] - transientCoord.ra.degree)<0.1]
-        smallTable = smallTable[np.abs(smallTable['TransientDEC'] - transientCoord.dec.degree)<0.1]
+        transientCoord = SkyCoord(ra=ra * u.degree, dec=dec * u.degree, frame='icrs')
+        smallTable = fullTable[np.abs(fullTable['TransientRA'] - transientCoord.ra.degree) < 0.1]
+        smallTable = smallTable[np.abs(smallTable['TransientDEC'] - transientCoord.dec.degree) < 0.1]
         if len(smallTable) > 0:
             c2 = SkyCoord(
-                smallTable['TransientRA'].values*u.deg,
-                smallTable['TransientDEC'].values*u.deg,
+                smallTable['TransientRA'].values * u.deg,
+                smallTable['TransientDEC'].values * u.deg,
                 frame='icrs'
             )
             sep = np.array(transientCoord.separation(c2).arcsec)
@@ -248,28 +245,41 @@ class TargetAux(models.Model):
                 host_idx = np.where(sep == np.nanmin(sep))[0][0]
                 host = smallTable.iloc[host_idx]
                 return self._add_host_from_df_row(host)
-            
+
         # search manually
         findNewHosts(
-            [self.target.name,],
-            [transientCoord,],
-            ['',],
+            [self.target.name, ],
+            [transientCoord, ],
+            ['', ],
             savepath=TMP_ASSOCIATION_DIR
         )
         association_dir = glob.glob(os.path.join(TMP_ASSOCIATION_DIR, "*"))[0]
         association_fn = glob.glob(
             os.path.join(association_dir, "*/FinalAssociationTable.csv")
         )[0]
-        
+
         association_df = pd.read_csv(association_fn)
         # delete temp folder
         shutil.rmtree(association_dir)
-        
+
         if len(association_df) > 0:
             host = association_df.iloc[0]
             return self._add_host_from_df_row(host)
         return None
-    
+
+
+class SNType(models.Model):
+    """Class representing a supernova type to associate with a project
+    """
+    sn_type = models.CharField(
+        max_length=100,
+        help_text="The supernova type to check for",
+        unique=True,
+    )
+
+    def __str__(self):
+        return self.sn_type
+
 
 class ProjectTargetList(TargetList):
     """
@@ -289,23 +299,31 @@ class ProjectTargetList(TargetList):
     """
     # Note from Kaylee: apparently in Django you can't override attributes of non-abstract classes!
     # May change TargetList and ProjectTargetList to both inherit from mutual abstract class in future
-    #name = models.CharField(max_length=200, help_text='The name of the Project.')
+    # use a different field name for now
+    # project_name is for the name of the project
+    # name is for the name of the target list
+    project_name = models.CharField(max_length=200,
+                                    help_text='The name of the Project.',
+                                    unique=True,
+                                    null=False,
+                                    blank=False,
+                                    default="Untitled Project")
 
     tns = models.BooleanField(
         help_text="Whether to query TNS catalog"
     )
-    sn_type = models.CharField(
-        max_length=100, help_text="The supernova type to check for."
+
+    sn_types = models.ManyToManyField(
+        SNType
     )
 
-    
-    #class Meta:
+    # class Meta:
     #    ordering = ('-created', 'name',)
 
     def __str__(self):
         return self.name
-    
-    
+
+
 class QuerySet(models.Model):
     """Set of query properties and tags.
     """
@@ -316,14 +334,14 @@ class QuerySet(models.Model):
     project = models.OneToOneField(
         ProjectTargetList, on_delete=models.CASCADE
     )
-    
+
     def generate_antares_query(self):
         """Generate ANTARES query string from
         properties and tags.
         """
         props = self.properties.all()
         tags = self.tags.all()
-        
+
         # TODO: allow for ORs (at moment it's all ANDs)
         query = {
             "query": {
@@ -360,7 +378,7 @@ class QueryProperty(models.Model):
     )
     categorical = models.BooleanField(
         help_text="Whether property value is categorical (as opposed to continuous)",
-        default=False,  
+        default=False,
     )
     # TODO: allow multiple target values in future
     target_value = models.CharField(
@@ -372,15 +390,15 @@ class QueryProperty(models.Model):
         QuerySet, on_delete=models.CASCADE,
         related_name='properties'
     )
-    
-    class Meta: # assert no repeat properties per QuerySet
+
+    class Meta:  # assert no repeat properties per QuerySet
         constraints = [
             models.UniqueConstraint(
                 fields=['queryset', 'antares_name'],
                 name='no_repeat_query_properties'
             )
         ]
-        
+
     def generate_antares_query_dict(self):
         """Generate query snippet for property.
         """
@@ -392,13 +410,13 @@ class QueryProperty(models.Model):
             }
         else:
             sub_dict = {}
-            
+
             if self.min_value is not None:
                 sub_dict['gte'] = self.min_value
             if self.max_value is not None:
                 sub_dict['lte'] = self.max_value
-                
-            if self.antares_name in ["ra", "dec"]: # why are they named differently :((((
+
+            if self.antares_name in ["ra", "dec"]:  # why are they named differently :((((
                 query_dict = {
                     "range": {
                         f"{self.antares_name}": sub_dict
@@ -411,8 +429,8 @@ class QueryProperty(models.Model):
                     }
                 }
         return query_dict
-    
-    
+
+
 class QueryTag(models.Model):
     """Class representing a tag to restrict during a query. 
     """
@@ -424,15 +442,15 @@ class QueryTag(models.Model):
         QuerySet, on_delete=models.CASCADE,
         related_name='tags'
     )
-    
-    class Meta: # assert no repeat properties per QuerySet
+
+    class Meta:  # assert no repeat properties per QuerySet
         constraints = [
             models.UniqueConstraint(
                 fields=['queryset', 'antares_name'],
                 name='no_repeat_query_tags'
             )
         ]
-        
+
     def generate_antares_query_dict(self):
         """Generate query snippet for property.
         """
@@ -440,6 +458,5 @@ class QueryTag(models.Model):
             "term": {
                 "tags": f"{self.antares_name}"
             }
-        }       
+        }
         return query_dict
-

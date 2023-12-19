@@ -38,7 +38,9 @@ def extra_antares_tags():
 def get_sn_types():
     """Return list of supernova type choices for the Project form."""
     sn_type_selection = [(s, s) for s in superphot_types]
-    sn_type_selection.append(('None', 'None'))
+    # removed the following line as the behaviour is the same as not selecting any supernova type
+    # removal is to prevent users from selecting a supernova type and this as well
+    # sn_type_selection.append(('None', 'None'))
     return sn_type_selection
 
 
@@ -59,10 +61,8 @@ def save_alerts_to_group(project, broker):
     query = project.queryset.generate_antares_query()
     print(query)
     loci = antares_client.search.search(query)
-    sn_type = project.sn_type[2:-2]  # TODO: fix this
     tns = project.tns
-    # TODO: make this not atrocious, will be fixed when query string is not
-    # directly saved to model
+    sn_types = project.sn_types.all()
 
     tag_objs = project.queryset.tags.all()
     tags = [tag_obj.antares_name for tag_obj in tag_objs]
@@ -75,16 +75,21 @@ def save_alerts_to_group(project, broker):
             print("no more loci")
             break
 
-        # bandaid solution
-        # TODO: fix
-        if sn_type not in ['None', '']:
-            skippy = True
-            if tns and check_type_tns(locus, tns_label_dict[sn_type]):
-                skippy = False
-            if ('superphot_plus_class' in locus.properties) & ('superphot_plus_classified' in tags):
-                if locus.properties['superphot_plus_class'] == sn_type:
-                    skippy = False
-            if skippy:
+        if sn_types:
+            # user selected some supernova types
+            # we will go through the locus and see if such types exist
+            # if not, we will skip this locus
+            ok = False
+            for sn_type in sn_types:
+                if (tns and check_type_tns(locus, tns_label_dict[sn_type.sn_type])) \
+                        or ('superphot_plus_class' in locus.properties
+                            and 'superphot_plus_classified' in tags
+                            and locus.properties['superphot_plus_class']) == sn_type.sn_type:
+                    ok = True
+                    break
+            if not ok:
+                # this locus does not have the supernova type(s) we want
+                # skip this locus
                 continue
 
         alert = broker.alert_to_dict(locus)
