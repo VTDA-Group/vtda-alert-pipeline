@@ -22,19 +22,6 @@ DATA_DIR = settings.MEDIA_ROOT
 TMP_ASSOCIATION_DIR = os.path.join(DATA_DIR, "ghost-temp/")
 
 
-def extra_antares_tags():
-    """Includes all tags of interest that are not shown by ANTARES API but are
-    implemented on the ANTARES website."""
-    tags = [
-        "matheson_extreme_vpdf",
-        "high_amplitude_variable_star_candidate",
-        "nuclear_transient",
-        "soraisam_sublum",
-        "ECL_blue_transient_candidate"
-    ]
-    return tags
-
-
 def get_sn_types():
     """Return list of supernova type choices for the Project form."""
     sn_type_selection = [(s, s) for s in superphot_types]
@@ -46,7 +33,7 @@ def get_sn_types():
 
 def check_type_tns(locus, sn_type):
     sn_type = 'SN ' + sn_type
-    if 'tns_public_objects' not in locus.catalogs:
+    if 'tns_public_objects' not in locus.catalog_objects:
         return False
     if 'type' not in locus.catalog_objects['tns_public_objects'][0]:
         return False
@@ -86,7 +73,7 @@ def save_alerts_to_group(project, broker):
                 if (tns and check_type_tns(locus, tns_label_dict[sn_type.sn_type])) \
                         or ('superphot_plus_class' in locus.properties
                             and 'superphot_plus_classified' in tags
-                            and locus.properties['superphot_plus_class']) == sn_type.sn_type:
+                            and locus.properties['superphot_plus_class'] == sn_type.sn_type):
                     ok = True
                     break
             if not ok:
