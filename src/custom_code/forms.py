@@ -1,25 +1,8 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime
-from importlib import import_module
-from astropy.time import Time, TimezoneInfo
-import logging
-import requests
-import marshmallow
-
-from django import forms
-from django.conf import settings
-from django.shortcuts import reverse
-from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, Submit, Fieldset, HTML
-
-from tom_observations.models import ObservationRecord
-from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
-from tom_targets.models import Target, TargetName
+from django import forms
 from tom_antares.antares import get_tag_choices
 
-from custom_code.models import ProjectTargetList
 from custom_code.filter_helper import (
     get_sn_types
 )

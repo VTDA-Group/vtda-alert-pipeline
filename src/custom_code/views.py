@@ -1,39 +1,32 @@
-from django.views.generic.base import RedirectView, TemplateView, View
-from django.views.generic.edit import FormView, CreateView, DeleteView
-from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from tom_alerts.alerts import get_service_class, get_service_classes
-from django.http import HttpResponseRedirect
-from django.urls import reverse_lazy, reverse
+from urllib.parse import urlencode
+
 from astropy.time import Time
-from guardian.mixins import PermissionListMixin
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, get_list_or_404
+from django.urls import reverse
+from django.urls import reverse_lazy
+from django.views.generic.base import RedirectView, TemplateView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import FormView, DeleteView
+from django.views.generic.list import ListView
 from django_filters.views import FilterView
+from guardian.mixins import PermissionListMixin
+from tom_alerts.alerts import get_service_class
 from tom_common.mixins import Raise403PermissionRequiredMixin
 from tom_targets.filters import TargetFilter
-import marshmallow
-import json
-from tom_alerts import alerts
-from django.shortcuts import get_object_or_404, get_list_or_404
-from urllib.parse import urlencode
-from django.urls import reverse_lazy
-from django.views.generic.edit import UpdateView
-
 from tom_targets.models import Target, TargetList
+
+from custom_code.filter_helper import (
+    save_alerts_to_group,
+    update_all_hosts
+)
+from custom_code.forms import ProjectForm
 from custom_code.models import (
     ProjectTargetList,
     QuerySet,
     QueryProperty,
     QueryTag,
-    TargetAux, SNType
-)
-
-from custom_code.forms import ProjectForm
-from custom_code.filter_helper import (
-    check_type_tns,
-    tns_label_dict,
-    save_alerts_to_group,
-    update_all_hosts
+    SNType
 )
 
 

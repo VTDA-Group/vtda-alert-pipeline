@@ -1,11 +1,11 @@
-from tom_alerts.alerts import GenericQueryForm, GenericAlert, GenericBroker
-from django import forms
-from django.conf import settings
-import requests
 import json
 from datetime import datetime, timedelta
-from crispy_forms.layout import Div, Fieldset, HTML, Layout
 
+import requests
+from crispy_forms.layout import Div, Fieldset, HTML, Layout
+from django import forms
+from django.conf import settings
+from tom_alerts.alerts import GenericQueryForm, GenericAlert, GenericBroker
 
 TNS_BASE_URL = 'https://www.wis-tns.org/'
 TNS_OBJECT_URL = f'{TNS_BASE_URL}api/get/object'
@@ -93,16 +93,16 @@ class TNSBroker(GenericBroker):
         # https://www.wis-tns.org/content/tns-newsfeed#comment-wrapper-23710
         return {
             'User-Agent': 'tns_marker{{"tns_id": "{0}", "type": "bot", "name": "{1}"}}'.format(
-                  settings.BROKERS['TNS']['bot_id'],
-                  settings.BROKERS['TNS']['bot_name']
-                )
-            }
+                settings.BROKERS['TNS']['bot_id'],
+                settings.BROKERS['TNS']['bot_name']
+            )
+        }
 
     @classmethod
     def fetch_alerts(cls, parameters):
         broker_feedback = ''
         if parameters['days_ago'] is not None:
-            public_timestamp = (datetime.utcnow() - timedelta(days=parameters['days_ago']))\
+            public_timestamp = (datetime.utcnow() - timedelta(days=parameters['days_ago'])) \
                 .strftime('%Y-%m-%d %H:%M:%S')
         elif parameters['min_date'] is not None:
             public_timestamp = parameters['min_date']
@@ -119,7 +119,7 @@ class TNSBroker(GenericBroker):
                 'units': parameters['units'],
                 'public_timestamp': public_timestamp,
             })
-         }
+        }
         response = requests.post(TNS_SEARCH_URL, data, headers=cls.tns_headers())
         response.raise_for_status()
         transients = response.json()

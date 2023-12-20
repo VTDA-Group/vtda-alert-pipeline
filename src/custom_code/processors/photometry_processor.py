@@ -1,10 +1,9 @@
 import mimetypes
 
+import numpy as np
 from astropy import units
 from astropy.io import ascii
 from astropy.time import Time, TimezoneInfo
-import numpy as np
-
 from tom_dataproducts.data_processor import DataProcessor
 from tom_dataproducts.exceptions import InvalidFileFormatException
 
@@ -52,7 +51,7 @@ class PhotometryProcessor(DataProcessor):
 
         for datum in data:
             time = Time(float(datum['time']), format='mjd')
-            utc = TimezoneInfo(utc_offset=0*units.hour)
+            utc = TimezoneInfo(utc_offset=0 * units.hour)
             time.format = 'datetime'
             value = {
                 'timestamp': time.to_datetime(timezone=utc),

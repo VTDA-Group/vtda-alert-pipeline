@@ -1,29 +1,26 @@
-from django.db import models
-from django.db.models.constraints import CheckConstraint
-from django.db.models import Q
-from django.db.models import OneToOneField
-from django.conf import settings
-
-import os, shutil, glob
-import pandas as pd
+import glob
+import os
 import re
-from astropy.coordinates import SkyCoord
-from astropy import units as u
-import numpy as np
-import requests
-from PIL import Image
+import shutil
 from io import BytesIO
 
+import numpy as np
+import pandas as pd
+import requests
+from PIL import Image
 from astro_ghost.ghostHelperFunctions import (
     findNewHosts,
-    getcolorim,
     geturl
 )
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astroquery.ipac.ned import Ned
-
-from tom_common.hooks import run_hook
+from django.conf import settings
+from django.db import models
+from django.db.models import OneToOneField
+from django.db.models import Q
+from django.db.models.constraints import CheckConstraint
 from tom_targets.models import Target, TargetList
-from tom_dataproducts.models import ReducedDatum
 
 STATIC_DIR = settings.STATICFILES_DIRS[0]
 DATA_DIR = settings.MEDIA_ROOT

@@ -1,14 +1,15 @@
-import os, glob, shutil
-import antares_client
-from astropy.coordinates import SkyCoord
-from astropy import units as u
-from astro_ghost.ghostHelperFunctions import getTransientHosts
-import marshmallow
+import glob
+import os
+import shutil
 
+import antares_client
+import marshmallow
+from astro_ghost.ghostHelperFunctions import getTransientHosts
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
-
 from tom_targets.models import Target
 
 from custom_code.models import TargetAux
