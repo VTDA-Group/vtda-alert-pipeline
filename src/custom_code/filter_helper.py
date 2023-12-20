@@ -57,6 +57,8 @@ def check_type_tns(locus, sn_type):
 def save_alerts_to_group(project, broker):
     """Save list of alerts' targets along
     with a certain group tag."""
+    print(f"Querying alerts for {project.name}")
+
     MAX_ALERTS = 20
     query = project.queryset.generate_antares_query()
     print(query)
@@ -116,6 +118,7 @@ def save_alerts_to_group(project, broker):
 
 def update_all_hosts():
     """Requeries all targets without hosts."""
+    print("Requerying all targets without hosts.")
     names = []
     coords = []
     for i, target in enumerate(Target.objects.all()):

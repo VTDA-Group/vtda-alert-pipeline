@@ -297,17 +297,6 @@ class ProjectTargetList(TargetList):
     :param modified: The time at which this target list was modified in the TOM database.
     :type modified: datetime
     """
-    # Note from Kaylee: apparently in Django you can't override attributes of non-abstract classes!
-    # May change TargetList and ProjectTargetList to both inherit from mutual abstract class in future
-    # use a different field name for now
-    # project_name is for the name of the project
-    # name is for the name of the target list
-    project_name = models.CharField(max_length=200,
-                                    help_text='The name of the Project.',
-                                    unique=True,
-                                    null=False,
-                                    blank=False,
-                                    default="Untitled Project")
 
     tns = models.BooleanField(
         help_text="Whether to query TNS catalog"

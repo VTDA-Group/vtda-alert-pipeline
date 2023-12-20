@@ -15,7 +15,7 @@ import marshmallow
 import json
 from tom_alerts import alerts
 from django.shortcuts import get_object_or_404, get_list_or_404
-
+from urllib.parse import urlencode
 from django.urls import reverse_lazy
 from django.views.generic.edit import UpdateView
 
@@ -35,6 +35,88 @@ from custom_code.filter_helper import (
     save_alerts_to_group,
     update_all_hosts
 )
+
+
+def update_params_as_queryset(parameters, qs):
+    tags = parameters.get('tags')
+    old_tags = QueryTag.objects.filter(queryset=qs)
+    for t in old_tags:
+        if t.antares_name not in [x for x in tags]:
+            t.delete()
+
+    for t in tags:
+        if t not in [x.antares_name for x in old_tags]:
+            tag = QueryTag(
+                antares_name=t,
+                queryset=qs
+            )
+            tag.save()
+
+    if 'LAISS_RFC_AD_filter' in tags and 'LAISS_RFC_AD_filter' not in [x.antares_name for x in old_tags]:
+        anom_prop = QueryProperty(
+            antares_name="LAISS_RFC_anomaly_score",
+            min_value=25.0,
+            queryset=qs
+        )
+        anom_prop.save()
+    elif 'LAISS_RFC_AD_filter' not in tags and 'LAISS_RFC_AD_filter' in [x.antares_name for x in old_tags]:
+        anom_prop = get_object_or_404(QueryProperty, antares_name="LAISS_RFC_anomaly_score", queryset=qs)
+        anom_prop.delete()
+
+    nobs_gt = parameters.get('nobs__gt')
+    nobs_lt = parameters.get('nobs__lt')
+    sra = parameters.get('ra')
+    sdec = parameters.get('dec')
+    ssr = parameters.get('sr')
+    mjd_gt = parameters.get('mjd__gt')
+    mjd_lt = parameters.get('mjd__lt')
+    mag_min = parameters.get('mag__min')
+    mag_max = parameters.get('mag__max')
+
+    # default values
+    if nobs_gt is None:
+        nobs_gt = 0
+    if nobs_lt is None:
+        nobs_lt = 1e10
+    if mjd_gt is None:
+        mjd_gt = 0.0
+    if mjd_lt is None:
+        mjd_lt = 1e10
+    if mag_min is None:
+        mag_min = 0
+    if mag_max is None:
+        mag_max = 40
+
+    nobs_prop = get_object_or_404(QueryProperty, antares_name="num_mag_values", queryset=qs)
+    nobs_prop.min_value = nobs_gt
+    nobs_prop.max_value = nobs_lt
+    nobs_prop.save()
+
+    mjd_prop = get_object_or_404(QueryProperty, antares_name="newest_alert_observation_time", queryset=qs)
+    mjd_prop.min_value = 0.0
+    mjd_prop.max_value = mjd_lt
+    mjd_prop.save()
+
+    mjd_prop2 = get_object_or_404(QueryProperty, antares_name="oldest_alert_observation_time", queryset=qs)
+    mjd_prop2.min_value = mjd_gt
+    mjd_prop2.max_value = 1e10
+    mjd_prop2.save()
+
+    mag_prop = get_object_or_404(QueryProperty, antares_name="newest_alert_magnitude", queryset=qs)
+    mag_prop.min_value = mag_min
+    mag_prop.max_value = mag_max
+    mag_prop.save()
+
+    sra_prop = get_object_or_404(QueryProperty, antares_name="ra", queryset=qs)
+    sra_prop.min_value = sra - ssr
+    sra_prop.max_value = sra + ssr
+    sra_prop.save()
+
+    sdec_prop = get_object_or_404(QueryProperty, antares_name="dec", queryset=qs)
+    sdec_prop.min_value = sdec - ssr
+    sdec_prop.max_value = sdec + ssr
+    sdec_prop.save()
+    sdec_prop.save()
 
 
 def save_params_as_queryset(parameters, project):
@@ -221,8 +303,6 @@ class ProjectsView(ListView):
         Formats the list of chosen SN types for each project.
         """
         context = super().get_context_data(**kwargs)
-        # for project in context['object_list']:
-        #     project.sn_types = get_list_or_404(SNType, project=project)
         return context
 
 
@@ -243,13 +323,12 @@ class ProjectCreateView(FormView):
         :type form: django.forms.ModelForm
         """
         param_dict = form.cleaned_data
-        name = form.cleaned_data['project_name']
+        name = form.cleaned_data['name']
         tns = form.cleaned_data['tns']
         sn_types = form.cleaned_data['sn_types']
 
         project = ProjectTargetList(
             name=name,
-            project_name=name,
             tns=tns,
         )
         project.save()
@@ -264,59 +343,75 @@ class ProjectCreateView(FormView):
             project=project,
         )
         qs.save()
-
+        print(param_dict)
         save_params_as_queryset(param_dict, project)
         return super().form_valid(form)
 
 
-class ProjectEditView(UpdateView):
-    model = ProjectTargetList
+class ProjectEditView(FormView):
     form_class = ProjectForm
-    template_name = 'tom_targets/project_form.html'
-    context_object_name = 'project'
-
-    def get_form_kwargs(self):
-        """
-        Returns the keyword arguments for instantiating the form.
-        Exclude the 'instance' argument since ProjectForm is not a ModelForm.
-        """
-        kwargs = super().get_form_kwargs()
-        if 'instance' in kwargs:
-            del kwargs['instance']
-        return kwargs
+    template_name = 'tom_targets/project_update_form.html'
 
     def get_initial(self):
         """
         Prepopulate the form with the current state of the object.
         """
-        initial = super().get_initial()
-        project = self.object
-        initial.update({
-            'project_name': project.project_name,
-            'sn_types': project.sn_types,
+        project_id = self.kwargs.get('pk')
+        print(project_id)
+        project = get_object_or_404(ProjectTargetList, id=project_id)
+        sn_types = project.sn_types.all()
+        qs = get_object_or_404(QuerySet, project=project)
+        tags = get_list_or_404(QueryTag, queryset=qs)
+        initial = {
+            'name': project.name,
+            'sn_types': [sn_type.sn_type for sn_type in sn_types],
             'tns': project.tns,
+            'tags': [tag.antares_name for tag in tags],
             # Add all other fields that need to be prepopulated
-        })
+        }
         return initial
 
     def form_valid(self, form):
         """
-        Process the form when it is valid. Manually update the ProjectTargetList instance.
+        Runs after form validation. Saves the target group and assigns the user's permissions to the group.
+
+        :param form: Form data for target creation
+        :type form: django.forms.ModelForm
         """
-        project = self.object
-        project.project_name = form.cleaned_data['project_name']
-        project.sn_types = form.cleaned_data['sn_types']
+        project_id = self.kwargs.get('pk')
+        project = get_object_or_404(ProjectTargetList, id=project_id)
+
+        project.name = form.cleaned_data['name']
         project.tns = form.cleaned_data['tns']
-        # Update other fields as necessary
         project.save()
 
+        sn_type_objects = []
+        for sn_type in form.cleaned_data['sn_types']:
+            sn_type_instance, created = SNType.objects.get_or_create(sn_type=sn_type)
+            sn_type_objects += [sn_type_instance]
+        project.sn_types.set(sn_type_objects)
+
+        qs = get_object_or_404(QuerySet, project=project)
+        qs.name = f"qs_{project.name}"
+        qs.save()
+
+        param_dict = form.cleaned_data
+        update_params_as_queryset(param_dict, qs)
+
+        # delete existing targets in project, necessary especially when project is edited
+        if project.targets.count() != 0:
+            print(f"Removing {project.targets.count()} targets from project {project.name}."
+                  f"Please requery broker to get the targets for the new parameters")
+            project.targets.clear()
         return super().form_valid(form)
 
     def get_success_url(self):
         """
         Redirect to the project view URL after successful form submission.
         """
-        return reverse_lazy('custom_code:project', kwargs={'pk': self.object.pk})
+        base_url = reverse_lazy('custom_code:project')
+        query_params = {'targetlist__name': self.kwargs.get('pk')}
+        return f"{base_url}?{urlencode(query_params)}"
 
 
 class ProjectDeleteView(DeleteView):

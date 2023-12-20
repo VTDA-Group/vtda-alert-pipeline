@@ -5,7 +5,7 @@
 
 <div class="row">
     <div class="col-md-10">
-        <h1 class="mb-3">{{ project.project_name }}</h1>
+        <h1 class="mb-3">{{ project.name }}</h1>
         <div class="row mb-3">
             <div class="col-md-12">
                 <ul class="nav nav-tabs" role="tablist">
@@ -105,8 +105,12 @@
                             <div class="row">
                                 <div class="col-12">
                                     <p><strong>SN Type:</strong> <span class="text-secondary">
-                                    {{ sn_types|join:", " }}
-                            </span>
+                                        {% if sn_types %}
+                                        {{ sn_types|join:", " }}
+                                        {% else %}
+                                        None
+                                        {% endif %}
+                                    </span>
                                     </p>
                                 </div>
                             </div>

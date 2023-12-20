@@ -27,7 +27,7 @@
         <td>
             <form action="{% url 'custom_code:project' %}" method="GET">
                 <button type="submit" class="btn btn-link" name="targetlist__name" value="{{group.id}}"
-                        title="View Group">{{ group.project_name }}
+                        title="View Group">{{ group.name }}
                 </button>
             </form>
         </td>
@@ -39,6 +39,7 @@
     <tr>
         <td>No groups yet</td>
         <td></td>
+         <td></td>
     </tr>
 
     {% endfor %}

@@ -27,7 +27,7 @@ from custom_code.filter_helper import (
 
 class ProjectForm(forms.Form):
     # define form content
-    project_name = forms.CharField(required=True)
+    name = forms.CharField(required=True)
     sn_types = forms.MultipleChoiceField(
         required=False,
         choices=get_sn_types,
@@ -116,7 +116,7 @@ class ProjectForm(forms.Form):
             HTML('<hr/>'),
             Fieldset(
                 'Project Name',
-                'project_name'
+                'name'
             ),
             HTML('<p style="color:blue;font-size:30px">ANTARES query parameters</p>'),
             Fieldset(
