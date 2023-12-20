@@ -6,131 +6,167 @@
 <div class="row">
     <div class="col-md-10">
         <h1 class="mb-3">{{ project.project_name }}</h1>
-        <div class="row">
+        <div class="row mb-3">
             <div class="col-md-12">
-        <span class="float-right">
-        {{ target_count }} Targets &nbsp;
-        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="false">
-          Create Targets
-        </button>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-          <a class="dropdown-item" href="{% url 'targets:create' %}" title="Create a Target">Create a Target</a>
-          <a class="dropdown-item" href="{% url 'targets:import' %}" title="Import Targets">Import Targets</a>
-          <a class="dropdown-item" href="{% url 'tom_catalogs:query' %}" title="Catalog Search">Catalog Search</a>
-        </div>
-        {% update_broker_data_button %}
-        <a class="btn btn-primary" href="{% url 'custom_code:requery-broker' %}" name="requery-broker-btn">Requery Broker</a>
-        <button onclick="document.getElementById('invisible-export-button').click()" class="btn btn-primary">Export Filtered Targets</button>
-            <!-- use an invisible button, because the key "Enter" event will triggered the first submit button and we want the default action to be applying filter -->
-      </span>
-            </div>
-        </div>
-        {% select_target_js %}
-        {% target_distribution filter.qs %}
-        {% bootstrap_pagination page_obj extra=request.GET.urlencode %}
-        <label id="displaySelected"></label>
-        <button id="optionSelectAll" type="button" class="btn btn-link"
-                onClick="select_all({{ target_count }})"></button>
-        <form id="grouping-form" action="{% url 'targets:add-remove-grouping' %}" method="POST">
-            {% csrf_token %}
-            <div class="form-group d-flex justify-content-end align-items-baseline">
-                <label>Add/Remove from grouping</label>
-                <select name="grouping" class="form-control w-25 ml-1">
-                    {% for grouping in groupings %}
-                    <option value="{{ grouping.id }}">{{ grouping.name }}</option>
-                    {% endfor %}
-                </select>
-                <input type="hidden" value="{{ query_string }}" name="query_string">
-                <input type="hidden" value="False" id="isSelectAll" name="isSelectAll">
-                <button type="submit" class="btn btn-outline-primary ml-1" name="add">Add</button>
-                <button type="submit" class="btn btn-outline-primary ml-1" name="move">Move</button>
-                <button type="submit" class="btn btn-outline-danger ml-1" name="remove">Remove</button>
-            </div>
-            {% target_table object_list %}
-        </form>
-        {% bootstrap_pagination page_obj extra=request.GET.urlencode %}
-        <!--start project description-->
-        <div class="container">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title">Project Details</h3>
-                        <a href="{% url 'custom_code:edit-project' project.id %}"
-                           class="btn btn-outline-secondary btn-sm"
-                           role="button">Edit</a>
-                    </div>
-                    <div class="row">
-                        <div class="col-12 col-md-6">
-                            <p><small class="text-muted">Created:</small> <span
-                                    class="text-secondary">{{ project.created }}</span></p>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <p><small class="text-muted">Modified:</small> <span
-                                    class="text-secondary">{{ project.modified }}</span></p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <p><strong>SN Type:</strong> <span class="text-secondary">
-                                    {{ sn_types|join:", " }}
-                            </span>
-                            </p>
-                        </div>
-                    </div>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="form-tab" data-toggle="tab" href="#form" role="tab"
+                           aria-controls="form" aria-selected="true">Targets</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="project-description-tab" data-toggle="tab" href="#project-description"
+                           role="tab" aria-controls="project-description" aria-selected="false">Project Description</a>
+                    </li>
+                </ul>
 
-                    <div class="row">
-                        <div class="col-12">
-                            <p><strong>TNS:</strong> <span class="text-secondary">{{ project.tns }}</span></p>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <h4 class="card-title">Query Tags</h4>
-                        {% if querytags %}
-                        <ul class="list-group">
-                            {% for querytag in querytags %}
-                            <li class="list-group-item">{{ querytag.antares_name }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% else %}
-                    <p class="text-muted">No query tags found for this QuerySet.</p>
-                    {% endif %}
-                    <div>
-                        <h4 class="card-title">Query Properties</h4>
-                        {% if querypropertys %}
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Form Tab Pane -->
+            <div class="tab-pane fade show active" id="form" role="tabpanel" aria-labelledby="form-tab">
+                <div class="col-md-12">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <table class="table table-hover">
-                                <thead class="thead-light">
-                                <tr>
-                                    <th>Property</th>
-                                    <th>Min Value</th>
-                                    <th>Max Value</th>
-                                    <th>Categorical</th>
-                                    <th>Target Value</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for queryproperty in querypropertys %}
-                                <tr>
-                                    <td>{{ queryproperty.antares_name }}</td>
-                                    <td>{{ queryproperty.min_value }}</td>
-                                    <td>{{ queryproperty.max_value }}</td>
-                                    <td>{{ queryproperty.categorical }}</td>
-                                    <td>{{ queryproperty.target_value }}</td>
-                                </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
+                            {{ target_count }} Targets
                         </div>
-                        {% else %}
-                        <p class="text-muted">No query properties found for this QuerySet.</p>
-                        {% endif %}
+                        <div>
+                            <!-- Primary Action Buttons -->
+                            <button class="btn btn-primary mr-2" type="button" id="dropdownMenuButton"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Create Targets
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <a class="dropdown-item" href="{% url 'targets:create' %}">Create a Target</a>
+                                <a class="dropdown-item" href="{% url 'targets:import' %}">Import Targets</a>
+                                <a class="dropdown-item" href="{% url 'tom_catalogs:query' %}">Catalog Search</a>
+                            </div>
+                            {% update_broker_data_button %}
+                            <a class="btn btn-primary" href="{% url 'custom_code:requery-broker' %}"
+                               name="requery-broker-btn">Requery Broker</a>
+                            <button onclick="document.getElementById('invisible-export-button').click()"
+                                    class="btn btn-primary">Export Filtered Targets
+                            </button>
+                        </div>
                     </div>
                 </div>
+                <!-- Your Form Content Here -->
+                {% select_target_js %}
+                {% target_distribution filter.qs %}
+                {% bootstrap_pagination page_obj extra=request.GET.urlencode %}
+                <label id="displaySelected"></label>
+                <button id="optionSelectAll" type="button" class="btn btn-link"
+                        onClick="select_all({{ target_count }})"></button>
+                <form id="grouping-form" action="{% url 'targets:add-remove-grouping' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="form-group d-flex justify-content-end align-items-baseline">
+                        <label>Add/Remove from grouping</label>
+                        <select name="grouping" class="form-control w-25 ml-1">
+                            {% for grouping in groupings %}
+                            <option value="{{ grouping.id }}">{{ grouping.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" value="{{ query_string }}" name="query_string">
+                        <input type="hidden" value="False" id="isSelectAll" name="isSelectAll">
+                        <button type="submit" class="btn btn-outline-primary ml-1" name="add">Add</button>
+                        <button type="submit" class="btn btn-outline-primary ml-1" name="move">Move</button>
+                        <button type="submit" class="btn btn-outline-danger ml-1" name="remove">Remove</button>
+                    </div>
+                    {% target_table object_list %}
+                </form>
+                {% bootstrap_pagination page_obj extra=request.GET.urlencode %}
+            </div>
+
+            <!-- Project Description Tab Pane -->
+            <div class="tab-pane fade" id="project-description" role="tabpanel"
+                 aria-labelledby="project-description-tab">
+                <!-- Your Project Description Content Here -->
+                <!--start project description-->
+                <div class="container">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="card-title">Project Details</h3>
+                                <a href="{% url 'custom_code:edit-project' project.id %}"
+                                   class="btn btn-outline-secondary btn-sm"
+                                   role="button">Edit</a>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    <p><small class="text-muted">Created:</small> <span
+                                            class="text-secondary">{{ project.created }}</span></p>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <p><small class="text-muted">Modified:</small> <span
+                                            class="text-secondary">{{ project.modified }}</span></p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <p><strong>SN Type:</strong> <span class="text-secondary">
+                                    {{ sn_types|join:", " }}
+                            </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <p><strong>TNS:</strong> <span class="text-secondary">{{ project.tns }}</span></p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <h4 class="card-title">Query Tags</h4>
+                                {% if querytags %}
+                                <ul class="list-group">
+                                    {% for querytag in querytags %}
+                                    <li class="list-group-item">{{ querytag.antares_name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No query tags found for this QuerySet.</p>
+                            {% endif %}
+                            <div>
+                                <h4 class="card-title">Query Properties</h4>
+                                {% if querypropertys %}
+                                <div>
+                                    <table class="table table-hover">
+                                        <thead class="thead-light">
+                                        <tr>
+                                            <th>Property</th>
+                                            <th>Min Value</th>
+                                            <th>Max Value</th>
+                                            <th>Categorical</th>
+                                            <th>Target Value</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for queryproperty in querypropertys %}
+                                        <tr>
+                                            <td>{{ queryproperty.antares_name }}</td>
+                                            <td>{{ queryproperty.min_value }}</td>
+                                            <td>{{ queryproperty.max_value }}</td>
+                                            <td>{{ queryproperty.categorical }}</td>
+                                            <td>{{ queryproperty.target_value }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No query properties found for this QuerySet.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--ends project description-->
             </div>
         </div>
-        <!--ends project description-->
+
+
     </div>
     {{ filter.fields }}
     <div class="col-md-2">

@@ -26,7 +26,6 @@
     <tr>
         <td>
             <form action="{% url 'custom_code:project' %}" method="GET">
-                <input type="hidden" name="project_name" value="{{ group.project_name }}">
                 <button type="submit" class="btn btn-link" name="targetlist__name" value="{{group.id}}"
                         title="View Group">{{ group.project_name }}
                 </button>

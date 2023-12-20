@@ -20,7 +20,6 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import UpdateView
 
 from tom_targets.models import Target, TargetList
-from custom_code.filters.project_filter import ProjectTargetFilter
 from custom_code.models import (
     ProjectTargetList,
     QuerySet,
@@ -180,7 +179,7 @@ class ProjectView(PermissionListMixin, FilterView):
     paginate_by = 25
     strict = False
     model = Target
-    filterset_class = ProjectTargetFilter
+    filterset_class = TargetFilter
     permission_required = 'tom_targets.view_target'
     ordering = ['-created']
 
@@ -199,17 +198,12 @@ class ProjectView(PermissionListMixin, FilterView):
                                 if self.request.user.is_authenticated
                                 else ProjectTargetList.objects.none())
         context['query_string'] = self.request.META['QUERY_STRING']
-        project_name = self.request.GET.get('project_name', '')
-        if project_name:
-            context['project'] = get_object_or_404(ProjectTargetList, project_name=project_name)
-            context['queryset'] = get_object_or_404(QuerySet, project=context['project'])
-            context['querytags'] = get_list_or_404(QueryTag, queryset=context['queryset'])
-            context['querypropertys'] = get_list_or_404(QueryProperty, queryset=context['queryset'])
-            context['sn_types'] = context['project'].sn_types.all()
-        else:
-            # Handle the case where no project_name is provided
-            # For instance, redirect or set a default context
-            pass
+        targetlist_name = self.request.GET.get('targetlist__name', '')
+        context['project'] = get_object_or_404(ProjectTargetList, id=targetlist_name)
+        context['queryset'] = get_object_or_404(QuerySet, project=context['project'])
+        context['querytags'] = get_list_or_404(QueryTag, queryset=context['queryset'])
+        context['querypropertys'] = get_list_or_404(QueryProperty, queryset=context['queryset'])
+        context['sn_types'] = context['project'].sn_types.all()
         return context
 
 
