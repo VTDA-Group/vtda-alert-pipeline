@@ -1,36 +1,13 @@
-from datetime import datetime, timedelta
-
-from astroplan import moon_illumination
-from astropy import units as u
-from astropy.coordinates import Angle, get_moon, SkyCoord
-from astropy.time import Time
-import mpld3
-from PIL import Image
-from io import BytesIO
 import base64
+from io import BytesIO
 
-
+from PIL import Image
 from django import template
-from django.conf import settings
-from django.db.models import Q
-from guardian.shortcuts import get_objects_for_user
-import numpy as np
-from plotly import offline
 from plotly import graph_objs as go
-import matplotlib.pyplot as plt
-
-from tom_observations.utils import get_sidereal_visibility
-from tom_targets.models import TargetExtra, Target, TargetList
-from tom_targets.forms import TargetVisibilityForm
-from urllib.parse import urlencode
-from tom_alerts.alerts import get_service_class, get_service_classes
-from django.db import IntegrityError
-from django.contrib import messages
-from tom_dataproducts.models import ReducedDatum
-
-from custom_code.models import ProjectTargetList
+from plotly import offline
 
 register = template.Library()
+
 
 @register.inclusion_tag('tom_targets/partials/target_host.html', takes_context=True)
 def host_info_for_target(context, target):
@@ -39,7 +16,7 @@ def host_info_for_target(context, target):
     """
     print("START")
     host = target.aux_info.host
-    
+
     if host is None:
         host_name = "N/A"
         host_ra = "N/A"
@@ -49,16 +26,15 @@ def host_info_for_target(context, target):
         host_ra = host.ra
         host_dec = host.dec
         host.add_spectra()
-        
+
     # get spectrum
     if host is not None:
         datums = host.add_spectra()
     else:
         datums = []
-        
+
     plot_data = []
     for value in datums:
-
         plot_data.append(
             go.Scatter(
                 x=value[0],
@@ -81,7 +57,7 @@ def host_info_for_target(context, target):
         output_type='div',
         show_link=False
     )
-    
+
     # get image - do not save!
     if host is None:
         im = Image.new('RGB', (240, 240))
@@ -95,7 +71,7 @@ def host_info_for_target(context, target):
 
     graphic = base64.b64encode(image_png)
     graphic = graphic.decode('utf-8')
-        
+
     return {
         'host_name': host_name,
         'host_ra': host_ra,

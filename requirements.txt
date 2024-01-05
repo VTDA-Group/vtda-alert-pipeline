@@ -4,3 +4,8 @@ numpy
 jax
 jaxlib
 astro_ghost
+django
+django-guardian
+tomtoolkit
+tom_antares
+mpld3

@@ -1,19 +1,15 @@
 import logging
-import requests
 
 import antares_client
+import marshmallow
+import requests
 from antares_client.search import get_by_ztf_object_id
 from astropy.time import Time, TimezoneInfo
 from crispy_forms.layout import Div, Fieldset, Layout, HTML
 from django import forms
-import marshmallow
-
 from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
-from tom_targets.models import Target, TargetName
 from tom_dataproducts.models import ReducedDatum
-
-from tom_dataproducts.models import DataProduct, ReducedDatum
-
+from tom_targets.models import Target, TargetName
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +37,7 @@ class ANTARESBrokerForm(GenericQueryForm):
         required=False,
         label='',
         widget=forms.TextInput(attrs={'placeholder': 'ZTF object id, e.g. ZTF19aapreis'})
-        )
+    )
     tag = forms.MultipleChoiceField(required=False, choices=get_tag_choices)
     nobs__gt = forms.IntegerField(
         required=False,
@@ -128,8 +124,8 @@ class ANTARESBrokerForm(GenericQueryForm):
             HTML('<hr/>'),
             HTML('<p style="color:blue;font-size:30px">Query by object name</p>'),
             Fieldset(
-                 'ZTF object ID',
-                 'ztfid'
+                'ZTF object ID',
+                'ztfid'
             ),
             HTML('<hr/>'),
             HTML('<p style="color:blue;font-size:30px">Simple query form</p>'),
@@ -145,8 +141,8 @@ class ANTARESBrokerForm(GenericQueryForm):
                         css_class='col',
                     ),
                     css_class='form-row'
-                    )
-                ),
+                )
+            ),
             Fieldset(
                 'Number of measurements',
                 Div(
@@ -204,8 +200,8 @@ class ANTARESBrokerForm(GenericQueryForm):
             HTML('<hr/>'),
             HTML('<p style="color:blue;font-size:30px">Advanced query</p>'),
             Fieldset(
-                 '',
-                 'esquery'
+                '',
+                'esquery'
             ),
             HTML('''
                 <p>
@@ -343,27 +339,27 @@ class ANTARESBroker(GenericBroker):
                 filters.append(mag_range)
 
             if sra and ssr:  # TODO: add cross-field validation
-                ra_range = {'range': {'ra': {'gte': sra-ssr, 'lte': sra+ssr}}}
+                ra_range = {'range': {'ra': {'gte': sra - ssr, 'lte': sra + ssr}}}
                 filters.append(ra_range)
 
             if sdec and ssr:  # TODO: add cross-field validation
-                dec_range = {'range': {'dec': {'gte': sdec-ssr, 'lte': sdec+ssr}}}
+                dec_range = {'range': {'dec': {'gte': sdec - ssr, 'lte': sdec + ssr}}}
                 filters.append(dec_range)
 
             if tags:
                 filters.append({'terms': {'tags': tags}})
 
             query = {
-                    "query": {
-                        "bool": {
-                            "filter": filters
-                        }
+                "query": {
+                    "bool": {
+                        "filter": filters
                     }
                 }
+            }
 
         loci = antares_client.search.search(query)
-#        if ztfid:
-#            loci = get_by_ztf_object_id(ztfid)
+        #        if ztfid:
+        #            loci = get_by_ztf_object_id(ztfid)
         alerts = []
         while len(alerts) < max_alerts:
             try:
@@ -376,8 +372,7 @@ class ANTARESBroker(GenericBroker):
     def fetch_alert(self, id):
         alert = get_by_ztf_object_id(id)
         return alert
-        
-    
+
     # TODO: This function
     def process_reduced_data(self, target, alert=None):
         """Implemented in this version, NOT in the original ANTARES filter.
@@ -408,7 +403,6 @@ class ANTARESBroker(GenericBroker):
                 data_type='photometry',
                 target=target
             )
-
 
     def to_target(self, alert: dict) -> Target:
         target = Target.objects.create(

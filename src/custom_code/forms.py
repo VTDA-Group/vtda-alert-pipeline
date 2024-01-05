@@ -1,39 +1,26 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime
-from importlib import import_module
-from astropy.time import Time, TimezoneInfo
-import logging
-import requests
-import marshmallow
-
-from django import forms
-from django.conf import settings
-from django.shortcuts import reverse
-from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, Submit, Fieldset, HTML
+from django import forms
+from tom_antares.antares import get_tag_choices
 
-from tom_observations.models import ObservationRecord
-from tom_alerts.alerts import GenericBroker, GenericQueryForm, GenericAlert
-from tom_targets.models import Target, TargetName
-from custom_code.models import ProjectTargetList
 from custom_code.filter_helper import (
-    all_antares_tag_choices,
     get_sn_types
 )
 
 
 class ProjectForm(forms.Form):
-
     # define form content
-    project_name = forms.CharField(required=True)
-    sn_type = forms.MultipleChoiceField(required=False, choices=get_sn_types)
+    name = forms.CharField(required=True)
+    sn_types = forms.MultipleChoiceField(
+        required=False,
+        choices=get_sn_types,
+        widget=forms.CheckboxSelectMultiple,
+    )
     tns = forms.BooleanField(required=False)
-    
+
     tags = forms.MultipleChoiceField(
         required=True,
-        choices=all_antares_tag_choices,
+        choices=get_tag_choices,
         widget=forms.CheckboxSelectMultiple,
     )
     nobs__gt = forms.IntegerField(
@@ -112,7 +99,7 @@ class ProjectForm(forms.Form):
             HTML('<hr/>'),
             Fieldset(
                 'Project Name',
-                'project_name'
+                'name'
             ),
             HTML('<p style="color:blue;font-size:30px">ANTARES query parameters</p>'),
             Fieldset(
@@ -127,8 +114,8 @@ class ProjectForm(forms.Form):
                         css_class='col',
                     ),
                     css_class='form-row'
-                    )
-                ),
+                )
+            ),
             Fieldset(
                 'Number of measurements',
                 Div(
@@ -181,7 +168,7 @@ class ProjectForm(forms.Form):
             ),
             Fieldset(
                 'Specific Type?',
-                'sn_type'
+                'sn_types'
             ),
             Fieldset(
                 'Include TNS?',
